@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
+            Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"/>
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+        <ProjectGuid>{C16FE5EE-0F58-468C-A2F1-3F9D56077192}</ProjectGuid>
+        <OutputType>Library</OutputType>
+        <AppDesignerFolder>Properties</AppDesignerFolder>
+        <RootNamespace>SilksongMod</RootNamespace>
+        <AssemblyName>SilksongMod</AssemblyName>
+        <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+        <FileAlignment>512</FileAlignment>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugSymbols>true</DebugSymbols>
+        <DebugType>full</DebugType>
+        <Optimize>false</Optimize>
+        <OutputPath>bin/Debug/</OutputPath>
+        <DefineConstants>DEBUG;TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <PlatformTarget>AnyCPU</PlatformTarget>
+        <DebugType>pdbonly</DebugType>
+        <Optimize>true</Optimize>
+        <OutputPath>bin\Release\</OutputPath>
+        <DefineConstants>TRACE</DefineConstants>
+        <ErrorReport>prompt</ErrorReport>
+        <WarningLevel>4</WarningLevel>
+    </PropertyGroup>
+    <ItemGroup>
+        <Reference Include="0Harmony">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\BepInEx\core\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="Assembly-CSharp">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\Assembly-CSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="Assembly-CSharp-firstpass">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\Assembly-CSharp-firstpass.dll</HintPath>
+        </Reference>
+        <Reference Include="BepInEx">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\BepInEx\core\BepInEx.dll</HintPath>
+        </Reference>
+        <Reference Include="com.rlabrecque.steamworks.net">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
+        </Reference>
+        <Reference Include="System"/>
+        <Reference Include="System.Core"/>
+        <Reference Include="System.Data"/>
+        <Reference Include="System.Xml"/>
+        <Reference Include="TeamCherry.BuildBot">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.BuildBot.dll</HintPath>
+        </Reference>
+        <Reference Include="TeamCherry.Cinematics">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.Cinematics.dll</HintPath>
+        </Reference>
+        <Reference Include="TeamCherry.Localization">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.Localization.dll</HintPath>
+        </Reference>
+        <Reference Include="TeamCherry.NestedFadeGroup">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.NestedFadeGroup.dll</HintPath>
+        </Reference>
+        <Reference Include="TeamCherry.SharedUtils">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.SharedUtils.dll</HintPath>
+        </Reference>
+        <Reference Include="TeamCherry.Splines">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.Splines.dll</HintPath>
+        </Reference>
+        <Reference Include="TeamCherry.TK2D">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.TK2D.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.InputLegacyModule">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.InputModule">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.InputModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.Physics2DModule">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.UI.dll</HintPath>
+        </Reference>
+        <Reference Include="UnityEngine.UIModule">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.UIModule.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Include="CreateMenuButtons.cs" />
+        <Compile Include="Deserializer.cs" />
+        <Compile Include="Enums\LobbyCommands.cs" />
+        <Compile Include="Enums\MethodCommandsEnum.cs" />
+        <Compile Include="Enums\P2PChannelEnum.cs" />
+        <Compile Include="LobbyManager.cs" />
+        <Compile Include="Patches\OnEnterWorld.cs" />
+        <Compile Include="Patches\OnHornetSpawn.cs" />
+        <Compile Include="Patches\OnSceneLoad.cs" />
+        <Compile Include="Patches\tk2dAnimatorPatch.cs" />
+        <Compile Include="Serializer.cs" />
+        <Compile Include="SteamP2P\SteamP2PReciever.cs" />
+        <Compile Include="SteamP2P\SteamP2PSender.cs" />
+        <Compile Include="Structs\SteamPlayer.cs" />
+        <Compile Include="SyncedHornetScript.cs" />
+        <Compile Include="TestMod.cs" />
+        <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="UI\InviteButtonScript.cs" />
+        <Compile Include="UI\JoinDisplay.cs" />
+        <Compile Include="UI\LobbyDisplay.cs" />
+        <Compile Include="UI\UIHelper.cs" />
+    </ItemGroup>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
+    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+         Other similar extension points exist, see Microsoft.Common.targets.
+    <Target Name="BeforeBuild">
+    </Target>
+    <Target Name="AfterBuild">
+    </Target>
+    -->
+    <Target Name="CopyDLLToPlugins" AfterTargets="Build">
+        <!-- copy only your main DLL -->
+        <Copy
+                SourceFiles="$(TargetDir)$(TargetName).dll"
+                DestinationFolder="/Users/omeed/Library/Application Support/Steam/steamapps/common/Hollow Knight Silksong/BepInEx/plugins/SilksongPVP"
+                SkipUnchangedFiles="true" />
+    </Target>
+</Project>
