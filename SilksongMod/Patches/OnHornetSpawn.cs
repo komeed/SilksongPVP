@@ -12,6 +12,7 @@ namespace SilksongMod
            // {
                 SilksongModPlugin.Log.LogInfo("Hornet Spawned!");
                 LobbyManager.SetHostHornet(__instance.gameObject);
+                LobbyManager.ActivateHornets(true);
            // }
         }
     }

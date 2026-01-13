@@ -38,7 +38,7 @@ namespace SilksongMod
             //CreateJoinButton();
  
             LobbyManager.CurrScene = "MAINMENU"; // set scene to main menu
-            LobbyManager.DeActivateHornets(); // ensure all hornets are not active in main menu
+            LobbyManager.ActivateHornets(false); // ensure all hornets are not active in main menu
         }
 
         public static void CreateHostButton(GameObject obj)

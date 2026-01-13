@@ -104,6 +104,7 @@
         <Compile Include="Enums\LobbyCommands.cs" />
         <Compile Include="Enums\MethodCommandsEnum.cs" />
         <Compile Include="Enums\P2PChannelEnum.cs" />
+        <Compile Include="NetworkSender.cs" />
         <Compile Include="LobbyManager.cs" />
         <Compile Include="Patches\OnEnterWorld.cs" />
         <Compile Include="Patches\OnHornetSpawn.cs" />
@@ -112,6 +113,7 @@
         <Compile Include="Serializer.cs" />
         <Compile Include="SteamP2P\SteamP2PReciever.cs" />
         <Compile Include="SteamP2P\SteamP2PSender.cs" />
+        <Compile Include="Structs\PlayerPosData.cs" />
         <Compile Include="Structs\SteamPlayer.cs" />
         <Compile Include="SyncedHornetScript.cs" />
         <Compile Include="TestMod.cs" />

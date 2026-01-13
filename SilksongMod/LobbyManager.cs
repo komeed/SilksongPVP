@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using InControl;
 using SilksongMod.SteamP2P;
 using UnityEngine;
 using Steamworks;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Object = System.Object;
 
 // ALERT: LOBBY INCLUDES YOURSELF
 
@@ -28,14 +30,16 @@ namespace SilksongMod // canvas is transform.parent
         public static Dictionary<SteamPlayer, string> PendingLobbyBuffer = new Dictionary<SteamPlayer, string>();
         
         /// GLOBAL HOST INSTANCE VARIABLES ///
-        
-        public static Dictionary<CSteamID, GameObject> SyncedHornets = new Dictionary<CSteamID, GameObject>();
+        public static Dictionary<CSteamID, SyncedHornetScript> SyncedHornetScripts = new Dictionary<CSteamID, SyncedHornetScript>();
+     //   public static Dictionary<CSteamID, GameObject> SyncedHornets = new Dictionary<CSteamID, GameObject>();
         
         public static GameObject HostHornet;
         
        // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
 
         public bool sent;
+        
+        #region Event Functions
         public void Awake()
         {
             sent = false;
@@ -55,40 +59,12 @@ namespace SilksongMod // canvas is transform.parent
             JoinDisplay.Init(gameObject, DefaultFont);
             JoinDisplay.SetVisible(false);
         }
-
-        private static void ResetLobby()
-        {
-            string steamName = SteamFriends.GetPersonaName();
-            CSteamID PlayerSteamID = SteamUser.GetSteamID();
-            CurrPlayer = new SteamPlayer(steamName, PlayerSteamID);
-            Players = new Dictionary<SteamPlayer, string>();
-            Players.Add(CurrPlayer, "MAINMENU"); // default (when game is loading)
-            
-            SyncedHornets = new Dictionary<CSteamID, GameObject>();
-            PendingLobbyBuffer = new Dictionary<SteamPlayer, string>();
-            
-            UpdateLobbyUI(); // Update lobby with current player stats
-        }
-
+        
         public void Start()
         {
             SilksongModPlugin.Log.LogInfo("START CALLED");
         }
-
-        public void Update()
-        {
-            // every frame send position data? try
-            if (Players.Count > 1 && CurrScene != "MAINMENU")
-            {
-                SendPositionToLobby();
-            }
-        }
-
-        public void DisplayInvite()
-        {
-            InviteButtonScript.CreateVerticalLayout(gameObject);
-        }
-
+        
         private void OnDestroy()
         {
             SilksongModPlugin.Log.LogInfo("LOBBY MAANGER DESTROYED HOW???");
@@ -103,17 +79,10 @@ namespace SilksongMod // canvas is transform.parent
                 SilksongModPlugin.Log.LogInfo("UHOH. Canvas Destroyed. What do we do?");
             }
         }
-
-        public static void CreateJoin(SteamPlayer player)
-        {
-            if (!JoinDisplay.IsActive())
-            {
-                SilksongModPlugin.Log.LogInfo($"Creating Join for player {player.Name}");
-                JoinDisplay.SetVisible(true);
-                JoinDisplay.SetText(player);
-            }
-        }
-
+        
+        #endregion
+        
+        #region Button Listeners
         public static void JoinButtonPressed(string buttonName)
         {
             if (buttonName == "Join") // if join pressed, join the lobby and send to everyone in lobby that you've joined
@@ -136,9 +105,10 @@ namespace SilksongMod // canvas is transform.parent
                 PendingLobbyBuffer = null;  // remove previous lobbybuffer reference for safety
                 
                 //send confirmation of join as a SteamPlayer to all of the people in the new lobby
-                foreach (SteamPlayer player in Players.Keys)
+                foreach (var player in Players)
                 {
-                    SteamP2PSender.SendPlayerJoinConfirmation(player.SteamID, CurrPlayer, CurrScene);
+                    SteamP2PSender.SendPlayerJoinConfirmation(player.Key.SteamID, CurrPlayer, CurrScene);
+                    CreateHornet(player.Key, player.Value);
                 }
                 
                 Players.Add(CurrPlayer, CurrScene); // add yourself
@@ -151,7 +121,30 @@ namespace SilksongMod // canvas is transform.parent
             }
             JoinDisplay.SetVisible(false);
         }
-// current data sending: 
+        
+        public void DisplayInvite()
+        {
+            InviteButtonScript.CreateVerticalLayout(gameObject);
+        }
+        
+        public static void LeaveButtonPressed()
+        {
+            SilksongModPlugin.Log.LogInfo("Leave button pressed.");
+            //first send to all people in lobby
+            byte[] data = Serializer.SerializeLeaveLobby(CurrPlayer);
+            foreach (SteamPlayer player in Players.Keys)
+            {
+                if (!player.Equals(CurrPlayer))
+                {
+                    SteamP2PSender.SendData(player.SteamID, data, P2PChannel.Lobby);
+                }
+            }
+            ResetLobby();
+        }
+        #endregion
+        
+        #region Lobby Commands
+        
         public static void MoveToNewLobby(Dictionary<SteamPlayer, string> data)
         {
             // first, update your own hashmap to contain this data, (but add yourself as well of course)
@@ -169,58 +162,53 @@ namespace SilksongMod // canvas is transform.parent
             //create that player's syncedHornet gameobject
             CreateHornet(player.Key, player.Value);
         }
-
-        private static void UpdateLobbyUI()
-        {
-            LobbyDisplay.UpdatePlayerList(Players);
-        }
-
-        public static void UpdateSyncedHornetPos(CSteamID steamID, Vector3 pos, Vector3 scale)
-        {
-            GameObject hornet = SyncedHornets[steamID];
-            hornet.transform.position = pos; // set all position and scale stuff
-            hornet.transform.localScale = scale;
-        }
         
-        public static void SendPositionToLobby()
-        {
-            if (HostHornet != null)
-            {
-                //serialize position and scale (scale for direction, position for position)
-                byte[] data = Serializer.SerializeTransform(HostHornet.transform.position, HostHornet.transform.localScale);
-                foreach (KeyValuePair<SteamPlayer, string> playerData in Players)
-                {
-                    if (!playerData.Key.Equals(CurrPlayer) && playerData.Value.Equals(CurrScene))
-                    {
-                        SteamP2PSender.SendPositionDataTo(playerData.Key, data);
-                    }
-                }
-            }
-        }
-        
-        public static void UpdateSceneForPlayer(SteamPlayer player, string scene) {
-            Players[player] = scene; // update players dict
-            GameObject hornet = SyncedHornets[player.SteamID];
-            hornet.SetActive(scene != "MAINMENU"); // set active only if changed
-        }
-
         public static void SendAnimationChangeToLobby(byte[] data)
         {
             foreach (KeyValuePair<SteamPlayer, string> playerData in Players)
             {
                 if (!playerData.Key.Equals(CurrPlayer))
                 {
-                    if (playerData.Value.Equals(CurrScene)) // only if they are on the same scene, send
+                    if (playerData.Value.Equals(CurrScene) && CurrScene != "MAINMENU") // only if they are on the same scene, send
                     {
                         SteamP2PSender.SendAnimationChangeTo(playerData.Key, data);
                     }
                 }
             }
         }
-
-        public static void SendLobbyToPlayer(SteamPlayer player)
+        
+        public static void ActivateHornets(bool active)
         {
-            SteamP2PSender.SendLobbyData(player, Players);
+            foreach (SyncedHornetScript hornet in SyncedHornetScripts.Values)
+            {
+                hornet.gameObject.SetActive(active);
+            }
+        }
+        
+        
+        public static void UpdateSyncedHornetPos(CSteamID steamID, PlayerPosData posData)
+        {
+            SyncedHornetScript hornet = SyncedHornetScripts[steamID];
+            hornet.UpdatePosition(posData);
+        }
+        
+        #endregion
+
+        public static void CreateJoin(SteamPlayer player)
+        {
+            if (!JoinDisplay.IsActive())
+            {
+                SilksongModPlugin.Log.LogInfo($"Creating Join for player {player.Name}");
+                JoinDisplay.SetVisible(true);
+                JoinDisplay.SetText(player);
+            }
+        }
+        
+        public static void UpdateSceneForPlayer(SteamPlayer player, string scene) {
+            Players[player] = scene; // update players dict
+            SyncedHornetScript hornet = SyncedHornetScripts[player.SteamID];
+            hornet.gameObject.SetActive(scene != "MAINMENU" && CurrScene != "MAINMENU"); // set active only if changed
+            SilksongModPlugin.Log.LogInfo($"Player {player.Name} joined {scene}");
         }
 
         public static void SendLobbyToPlayerWithJoin(SteamPlayer player)
@@ -230,24 +218,47 @@ namespace SilksongMod // canvas is transform.parent
 
         public static void UpdateCurrSceneAndSend(string scene)
         {
+            SilksongModPlugin.Log.LogInfo($"Updating CurrSceneAndSend for {scene}");
             CurrScene = scene;
+            SilksongModPlugin.Log.LogInfo($"Players count before send: {Players.Count}");
+            Players[CurrPlayer] = scene;
             foreach (SteamPlayer player in Players.Keys)
             {
                 if (player.Equals(CurrPlayer))
                 {
-                    Players[player] = scene; // update dictionary's scene
                     continue;
                 }
                 SteamP2PSender.SendCurrSceneToPlayer(player, CurrScene);
             }
+            
+            SilksongModPlugin.Log.LogInfo($"Players count after send: {Players.Count}");
         }
+        
+        public static void SetHostHornet(GameObject hornet)
+        {
+            HostHornet = hornet;
+            HostHornet.AddComponent<NetworkSender>();
+        }
+
+        public static void LeaveRecievedFromPlayer(SteamPlayer player)
+        {
+            SilksongModPlugin.Log.LogInfo($"Leave recieved from player {player.Name}");
+            Players.Remove(player);
+            SyncedHornetScript hornet = SyncedHornetScripts[player.SteamID];
+            Destroy(hornet.gameObject); //simply destroy him
+            SyncedHornetScripts.Remove(player.SteamID);
+            UpdateLobbyUI();
+        }
+        
+        #region Helper Methods
+        
+        private static void UpdateLobbyUI() { LobbyDisplay.UpdatePlayerList(Players); }
         
         private static void CreateHornet(SteamPlayer player, string scene)
         {
             
             GameObject syncedHornet = new GameObject("SyncedHornet");
             
-            SyncedHornets.Add(player.SteamID, syncedHornet);
             if (scene == CurrScene && CurrScene != "MAINMENU")
             {
                 SilksongModPlugin.Log.LogInfo("CreateHornet: player added while ingame, in same scene.");
@@ -261,45 +272,26 @@ namespace SilksongMod // canvas is transform.parent
             SyncedHornetScript script = syncedHornet.AddComponent<SyncedHornetScript>(); 
             script.steamID = player.SteamID;
             script.name = player.Name;
+            SyncedHornetScripts.Add(player.SteamID, script);
+            DontDestroyOnLoad(syncedHornet);
             
             SilksongModPlugin.Log.LogInfo("Created Hornet.");
         }
         
-        public static void SetHostHornet(GameObject hornet)
+        private static void ResetLobby()
         {
-            HostHornet = hornet;
-        }
+            string steamName = SteamFriends.GetPersonaName();
+            CSteamID PlayerSteamID = SteamUser.GetSteamID();
+            CurrPlayer = new SteamPlayer(steamName, PlayerSteamID);
+            Players = new Dictionary<SteamPlayer, string>();
+            Players.Add(CurrPlayer, "MAINMENU"); // default (when game is loading)
 
-        public static void DeActivateHornets()
-        {
-            foreach (GameObject hornet in SyncedHornets.Values)
-            {
-                hornet.SetActive(false);
-            }
+            SyncedHornetScripts.Clear();
+            PendingLobbyBuffer.Clear();
+            
+            UpdateLobbyUI(); // Update lobby with current player stats
         }
-
-        public static void LeaveButtonPressed()
-        {
-            SilksongModPlugin.Log.LogInfo("Leave button pressed.");
-            //first send to all people in lobby
-            byte[] data = Serializer.SerializeLeaveLobby(CurrPlayer);
-            foreach (SteamPlayer player in Players.Keys)
-            {
-                if (!player.Equals(CurrPlayer))
-                {
-                    SteamP2PSender.SendData(player.SteamID, data, P2PChannel.Lobby);
-                }
-            }
-            ResetLobby();
-        }
-
-        public static void LeaveRecievedFromPlayer(SteamPlayer player)
-        {
-            SilksongModPlugin.Log.LogInfo($"Leave recieved from player {player.Name}");
-            Players.Remove(player);
-            GameObject hornet = SyncedHornets[player.SteamID];
-            Destroy(hornet); //simply destroy him
-            SyncedHornets.Remove(player.SteamID);
-        }
+        
+        #endregion
     }
 }

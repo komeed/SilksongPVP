@@ -12,6 +12,7 @@ namespace SilksongMod
         public string name; // for later name above hornet implementation
         
         public tk2dSpriteAnimator animator;
+        private Rigidbody2D _rb;
 
         private void Awake()
         {
@@ -29,10 +30,10 @@ namespace SilksongMod
             {
                 SilksongModPlugin.Log.LogError("Could not find Host Hornet Sprite!");
             }
-
-            UnityEngine.Object.DontDestroyOnLoad(gameObject);
             SilksongModPlugin.Log.LogInfo("Finished setting up Hornet.");
             CopyAnimatorFields();
+            _rb = gameObject.AddComponent<Rigidbody2D>();
+            _rb.gravityScale = 0;
         }
 
         private void Start()
@@ -43,6 +44,13 @@ namespace SilksongMod
         void OnDestroy()
         {
             SilksongModPlugin.Log.LogInfo($"Synced Hornet for Player {name} WAS DESTROYED. HOW???");
+        }
+
+        public void UpdatePosition(PlayerPosData posData)
+        {
+            transform.position = posData.Position;
+            transform.localScale = posData.LocalScale;
+            _rb.linearVelocity = posData.Velocity;
         }
         
         private void DrawHornet(tk2dSprite original)

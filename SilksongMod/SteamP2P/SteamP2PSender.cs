@@ -90,17 +90,5 @@ namespace SilksongMod.SteamP2P
                 SilksongModPlugin.Log.LogError($"Failed to send position data to Player {player.Name}");
             }
         }
-
-        public static void SendDataTo(SteamPlayer player, byte[] data, P2PChannel channel)
-        {
-            if (SendData(player.SteamID, data, channel))
-            {
-                SilksongModPlugin.Log.LogInfo($"Successfully sent data to Player {player.Name}");
-            }
-            else
-            {
-                SilksongModPlugin.Log.LogError($"Failed to send data to Player {player.Name}");
-            }
-        }
     }
 }

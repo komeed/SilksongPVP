@@ -9,20 +9,16 @@ using UnityEngine.UI;
 
 namespace SilksongMod
 {
-    public class Deserializer
+    public static class Deserializer
     {
         public static void RecieveAnimData(byte[] data, CSteamID sender)
         {
             RPCMethod method = (RPCMethod)data[0];
             tk2dSpriteAnimator animator;
-            if (LobbyManager.SyncedHornets.TryGetValue(sender, out var hornet))
+            SilksongModPlugin.Log.LogInfo($"Size of synced hornet: {LobbyManager.SyncedHornetScripts.Count}");
+            if (LobbyManager.SyncedHornetScripts.TryGetValue(sender, out var hornet))
             {
-                animator = hornet.GetComponent<tk2dSpriteAnimator>();
-                if (animator == null)
-                {
-                    SilksongModPlugin.Log.LogError("Error: No Hornet Animator Present in HashMap");
-                    return;
-                }
+                animator = hornet.animator;
             }
             else
             {
@@ -46,28 +42,28 @@ namespace SilksongMod
 
         public static void RecievePosData(byte[] data, CSteamID sender)
         {
-            Vector3 pos, scale;
-            DeserializeTransform(data, out pos, out scale);
-            LobbyManager.UpdateSyncedHornetPos(sender, pos, scale);
+            PlayerPosData pos = DeserializePlayerPosData(data);
+            LobbyManager.UpdateSyncedHornetPos(sender, pos);
         }
-        
-        public static void DeserializeTransform(byte[] data, out Vector3 v1, out Vector3 v2)
+
+        public static PlayerPosData DeserializePlayerPosData(byte[] data)
         {
             using (MemoryStream ms = new MemoryStream(data))
             using (BinaryReader reader = new BinaryReader(ms))
             {
-                // Read position vector3
-                float x1 = reader.ReadSingle();
-                float y1 = reader.ReadSingle();
-                float z1 = reader.ReadSingle();
-                v1 = new Vector3(x1, y1, z1);
-
-                // Read scale Vector3
-                float x2 = reader.ReadSingle();
-                float y2 = reader.ReadSingle();
-                float z2 = reader.ReadSingle(); 
-                v2 = new Vector3(x2, y2, z2);
+                Vector3 pos = reader.ReadVector3();
+                Vector3 scale = reader.ReadVector3();
+                Vector3 velo = reader.ReadVector3();
+                return new PlayerPosData(pos, scale, velo);
             }
+        }
+        
+        private static Vector3 ReadVector3(this BinaryReader reader)
+        {
+            float x1 = reader.ReadSingle();
+            float y1 = reader.ReadSingle();
+            float z1 = reader.ReadSingle();
+            return new Vector3(x1, y1, z1);
         }
 
 
@@ -115,6 +111,7 @@ namespace SilksongMod
             }
             else if (lobbyCommand == LobbyCommand.PlayerJoined)
             {
+                SilksongModPlugin.Log.LogInfo($"Recieved player join lobby command from SteamID {sender}");
                 KeyValuePair<SteamPlayer, string> playerData = DeserializeSinglePlayerData(data);
                 LobbyManager.AddPlayerToLobby(playerData);
             }

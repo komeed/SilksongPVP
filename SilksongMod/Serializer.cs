@@ -118,24 +118,25 @@ namespace SilksongMod
                 return ms.ToArray();
             }
         }
-        
-        public static byte[] SerializeTransform(Vector3 v1, Vector3 v2)
+
+        public static byte[] SerializePlayerPosData(PlayerPosData posData)
         {
             using (MemoryStream ms = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(ms))
             {
-                // Write first Vector3
-                writer.Write(v1.x);
-                writer.Write(v1.y);
-                writer.Write(v1.z);
-
-                // Write second Vector3
-                writer.Write(v2.x);
-                writer.Write(v2.y);
-                writer.Write(v2.z);
-
+                writer.Write(posData.Position);
+                writer.Write(posData.LocalScale);
+                writer.Write(posData.Velocity);
+                
                 return ms.ToArray();
             }
+        }
+        
+        private static void Write(this BinaryWriter writer, Vector3 v)
+        {
+            writer.Write(v.x);
+            writer.Write(v.y);
+            writer.Write(v.z);
         }
 
         public static byte[] SerializeLeaveLobby(SteamPlayer player)

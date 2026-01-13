@@ -23,6 +23,8 @@ namespace SilksongMod.SteamP2P
             SteamNetworking.AcceptP2PSessionWithUser(sender); // immediately accept, but show join when lobby received
             
             SilksongModPlugin.Log.LogInfo($"Accepted {name}'s Session Request!");
+            // open join menu
+            LobbyManager.CreateJoin(new SteamPlayer(name, sender));
         }
         
         private void OnP2PSessionConnectFail(P2PSessionConnectFail_t fail)
@@ -54,8 +56,8 @@ namespace SilksongMod.SteamP2P
                 }
                 CSteamID sender;
                 SteamNetworking.ReadP2PPacket(buffer, size, out size, out sender, (byte)P2PChannel.Pos);
-                Deserializer.RecievePosData(buffer, sender);
                 SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
+                Deserializer.RecievePosData(buffer, sender);
             }
             
             while (SteamNetworking.IsP2PPacketAvailable(out size, (byte)P2PChannel.Anim)) // read Anim data
@@ -69,6 +71,11 @@ namespace SilksongMod.SteamP2P
                 Deserializer.RecieveAnimData(buffer, sender);
                 SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
             }
+        }
+
+        void OnDestroy()
+        {
+            SilksongModPlugin.Log.LogInfo("SteamP2PRecieverDestroyed, how come?");
         }
         
         public static string GetNameFromSteamID(CSteamID steamID)

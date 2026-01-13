@@ -57,10 +57,6 @@ namespace SilksongMod
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                LobbyManager.CreateJoin(LobbyManager.CurrPlayer);
-            }
         }
 
         public LobbyManager CreateFullScreenCanvas()
