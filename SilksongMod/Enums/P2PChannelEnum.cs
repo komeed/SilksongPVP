@@ -4,6 +4,7 @@ namespace SilksongMod.SteamP2P
     {
         Lobby = 0,
         Anim = 2,
-        Pos = 1 // for changes in position
+        Pos = 1, // for changes in position
+        Attack = 3
     }
 }

@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
+using SilksongMod.SteamP2P;
 using Steamworks;
 using UnityEngine;
+using Object = System.Object;
 
 //using UnityEngine.Windows;
 
@@ -13,8 +16,9 @@ namespace SilksongMod
         
         public tk2dSpriteAnimator animator;
         private Rigidbody2D _rb;
+        private BoxCollider2D _collider;
 
-        public GameObject Attacks;
+        private GameObject[] NailAttacks;
 
         private void Awake()
         {
@@ -36,6 +40,10 @@ namespace SilksongMod
             CopyAnimatorFields();
             _rb = gameObject.AddComponent<Rigidbody2D>();
             _rb.gravityScale = 0;
+            
+            CreateNailAttacks();
+            _collider = gameObject.AddComponent<BoxCollider2D>();
+            CopyBoxCollider2D(_collider, LobbyManager.HostHornet);
         }
 
         private void Start()
@@ -53,6 +61,8 @@ namespace SilksongMod
             transform.position = posData.Position;
             transform.localScale = posData.LocalScale;
             _rb.linearVelocity = posData.Velocity;
+            _collider.size = posData.ColliderSize;
+            _collider.offset = posData.ColliderOffset;
         }
         
         private void DrawHornet(tk2dSprite original)
@@ -117,11 +127,119 @@ namespace SilksongMod
             animator.AnimationEventTriggered = hostAnimator.AnimationEventTriggered;
         }
 
-        private static GameObject CreateNailAttacks(GameObject hornet)
+        private void CreateNailAttacks()
         {
-            GameObject Attacks = new GameObject("SyncedAttacks");
-            Attacks.transform.parent = hornet.transform;
-            return Attacks;
+            NailAttacks = new GameObject[LobbyManager.NABListIndex.Count]; // first initialize
+            
+            if (LobbyManager.AttacksBuffer != null)
+            {
+                GameObject Attack = Instantiate(LobbyManager.AttacksBuffer, transform);
+                for (int i = 0; i < Attack.transform.childCount; i++) // add all children to thing
+                {
+                    GameObject child = Attack.transform.GetChild(i).gameObject;
+                    NailAttacks[i] = child;
+                }
+                return;
+            }
+            GameObject Attacks = new GameObject("SyncedNailAttacks");
+            Attacks.transform.parent = transform;
+            Attacks.SetActive(false); // ensure it's not active
+
+            foreach (var NABIndex in LobbyManager.NABListIndex)
+            {
+                GameObject hostAttack = NABIndex.Key.gameObject;
+                hostAttack.SetActive(false); // temporarily set it inactive 
+                GameObject nailAttack = Instantiate(hostAttack, Attacks.transform);
+                hostAttack.SetActive(true);
+                if (nailAttack.activeSelf)
+                {
+                    SilksongModPlugin.Log.LogInfo("ATTACK IS STILL ACTIVE, THIS FAILs");
+                }
+                RemoveAllButGraphics(nailAttack);
+                NailAttacks[NABIndex.Value] = nailAttack;
+            }
+            LobbyManager.AttacksBuffer = Attacks;
+        }
+
+        private void RemoveAllButGraphics(GameObject go)
+        {
+            var components = go.GetComponents<Component>();
+
+            foreach (var c in components)
+            {
+                if (c == null) continue; // missing script
+
+                if (c is Transform) continue;
+                if (c is MeshRenderer) continue;
+                if (c is MeshFilter) continue;
+                if (c is tk2dSprite) continue;
+                if (c is tk2dSpriteAnimator) continue;
+
+                Destroy(c);
+            }
+        }
+
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            if (other.gameObject.tag == "Nail Attack")
+            {
+                byte direction = 0; // 0 is left, 1 is right
+                if (transform.position.x > other.transform.position.x)
+                {
+                    direction = 1;
+                }
+                SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data");
+                SteamP2PSender.SendData(steamID, new byte[2] {1, direction}, P2PChannel.Attack); // nail damage deals one mask,
+                // direction is which side the syncedhornet got hit
+            }
+        }
+
+        public void ActivateNailAttack(int index, bool active)
+        {
+            NailAttacks[index].SetActive(active);
+        }
+
+        public tk2dSpriteAnimator RetrieveAnimatorFromIndex(int index)
+        {
+            if (index >= 0 && index < NailAttacks.Length)
+            {
+                if (NailAttacks[index].TryGetComponent(out tk2dSpriteAnimator sprite))
+                {
+                    return sprite;
+                }
+                else
+                {
+                    SilksongModPlugin.Log.LogInfo("This should not happen. You screwed up.");
+                }
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogError("index is out of bounds, OOPPS");
+            }
+
+            return null;
+        }
+
+        public void CopyBoxCollider2D(BoxCollider2D source, GameObject target)
+        {
+            if (source == null || target == null) return;
+
+            // Get or add a BoxCollider2D to the target
+            BoxCollider2D copy = target.GetComponent<BoxCollider2D>();
+            if (copy == null)
+            {
+                SilksongModPlugin.Log.LogInfo("ERROR: Host Hornet doesn't have boxcollider");
+                return;
+            }
+
+            // Copy the main properties
+            copy.offset = source.offset;
+            copy.size = source.size;
+            copy.isTrigger = source.isTrigger;
+            copy.density = source.density;
+            copy.edgeRadius = source.edgeRadius;
+            copy.sharedMaterial = source.sharedMaterial;
+            copy.enabled = source.enabled;
         }
     }
 }

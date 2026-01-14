@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using GlobalEnums;
 using SilksongMod.SteamP2P;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace SilksongMod
         private float _timer;
 
         private Rigidbody2D _rb;
+        private BoxCollider2D _collider;
 
         Vector3 lastPhysicsPos;
         Vector3 lastPhysicsVel;
@@ -17,6 +19,7 @@ namespace SilksongMod
         void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
+            _collider = GetComponent<BoxCollider2D>();
         }
 
         void Update()
@@ -27,6 +30,11 @@ namespace SilksongMod
             {
                 _timer -= SendInterval; // preserves timing accuracy
                 SendNetworkUpdate();
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                LobbyManager.HeroController.TakeDamage(null, CollisionSide.left, 1, HazardType.ENEMY);
             }
         }
 
@@ -42,7 +50,7 @@ namespace SilksongMod
             if (LobbyManager.Players.Count > 1 && LobbyManager.CurrScene != "MAINMENU")
             {
                 //serialize position and scale (scale for direction, position for position)
-                byte[] data = Serializer.SerializePlayerPosData(new PlayerPosData(lastPhysicsPos, transform.localScale, lastPhysicsVel));
+                byte[] data = Serializer.SerializePlayerPosData(new PlayerPosData(transform, _rb, _collider));
                 foreach (KeyValuePair<SteamPlayer, string> playerData in LobbyManager.Players)
                 {
                     if (!playerData.Key.Equals(LobbyManager.CurrPlayer) &&

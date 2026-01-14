@@ -42,8 +42,7 @@ namespace SilksongMod.SteamP2P
                 {
                     buffer = new byte[size];
                 }
-                CSteamID sender;
-                SteamNetworking.ReadP2PPacket(buffer, size, out size, out sender, (byte)P2PChannel.Lobby);
+                SteamNetworking.ReadP2PPacket(buffer, size, out size, out CSteamID sender, (byte)P2PChannel.Lobby);
                 SilksongModPlugin.Log.LogInfo($"Received {size} bytes from SteamID {sender}");
                 Deserializer.RecieveLobbyData(buffer, sender);
             }
@@ -54,8 +53,7 @@ namespace SilksongMod.SteamP2P
                 {
                     buffer = new byte[size];
                 }
-                CSteamID sender;
-                SteamNetworking.ReadP2PPacket(buffer, size, out size, out sender, (byte)P2PChannel.Pos);
+                SteamNetworking.ReadP2PPacket(buffer, size, out size, out CSteamID sender, (byte)P2PChannel.Pos);
                 SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
                 Deserializer.RecievePosData(buffer, sender);
             }
@@ -66,9 +64,18 @@ namespace SilksongMod.SteamP2P
                 {
                     buffer = new byte[size];
                 }
-                CSteamID sender;
-                SteamNetworking.ReadP2PPacket(buffer, size, out size, out sender, (byte)P2PChannel.Anim);
+                SteamNetworking.ReadP2PPacket(buffer, size, out size, out CSteamID sender, (byte)P2PChannel.Anim);
                 Deserializer.RecieveAnimData(buffer, sender);
+                SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
+            }
+            while (SteamNetworking.IsP2PPacketAvailable(out size, (byte)P2PChannel.Attack)) // read Anim data
+            {
+                if (buffer.Length != size)
+                {
+                    buffer = new byte[size];
+                }
+                SteamNetworking.ReadP2PPacket(buffer, size, out size, out CSteamID sender, (byte)P2PChannel.Attack);
+                Deserializer.RecieveAttackData(buffer, sender);
                 SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
             }
         }

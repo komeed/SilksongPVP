@@ -32,23 +32,19 @@ namespace SilksongMod // canvas is transform.parent
         /// GLOBAL HOST INSTANCE VARIABLES ///
         public static Dictionary<CSteamID, SyncedHornetScript> SyncedHornetScripts = new Dictionary<CSteamID, SyncedHornetScript>();
         
-        //public static Dictionary<CSteamID, byte> SlashGOToIndex = new Dictionary<CSteamID, byte>();
-
-        public static NailAttackBase[] NABList;
-
         public static Dictionary<NailAttackBase, int> NABListIndex = new Dictionary<NailAttackBase, int>();
      //   public static Dictionary<CSteamID, GameObject> SyncedHornets = new Dictionary<CSteamID, GameObject>();
         
         public static GameObject HostHornet;
+        public static HeroController HeroController;
+
+        public static GameObject AttacksBuffer;
         
        // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
-
-        public bool sent;
         
         #region Event Functions
         public void Awake()
         {
-            sent = false;
             _apiRunning = false;
             SilksongModPlugin.Log.LogInfo("Starting API");
             
@@ -251,6 +247,7 @@ namespace SilksongMod // canvas is transform.parent
         {
             HostHornet = hornet;
             HostHornet.AddComponent<NetworkSender>();
+            HeroController = HostHornet.GetComponent<HeroController>();
         }
 
         public static void LeaveRecievedFromPlayer(SteamPlayer player)
@@ -269,7 +266,10 @@ namespace SilksongMod // canvas is transform.parent
         
         private static void CreateHornet(SteamPlayer player, string scene)
         {
-            
+            if (HostHornet == null)
+            {
+                SilksongModPlugin.Log.LogInfo("host hornet is null; we need to figure out a different way to do this.");
+            }
             GameObject syncedHornet = new GameObject("SyncedHornet");
             
             if (scene == CurrScene && CurrScene != "MAINMENU")
@@ -289,6 +289,8 @@ namespace SilksongMod // canvas is transform.parent
             DontDestroyOnLoad(syncedHornet);
             
             SilksongModPlugin.Log.LogInfo("Created Hornet.");
+            
+            // now that the script is inactive, instantiate a 
         }
         
         private static void ResetLobby()
@@ -307,11 +309,12 @@ namespace SilksongMod // canvas is transform.parent
 
         public static void StoreNailAttackComponents(GameObject hornet)
         {
-            if (NABList.IsNullOrEmpty())
+            if (NABListIndex.IsNullOrEmpty())
             {
-                NABList =
-                    hornet.gameObject.GetComponentsInChildren<NailAttackBase>(true);
+                return;
             }
+            NailAttackBase[] NABList =
+                    hornet.gameObject.GetComponentsInChildren<NailAttackBase>(true);
             // used to retrieve the index with O(1) search instead of O(n)
             for (int i = 0; i < NABList.Length; i++)
             {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using GlobalEnums;
 using SilksongMod.Enums;
 using Steamworks;
 using UnityEngine;
@@ -13,7 +14,13 @@ namespace SilksongMod
     {
         public static void RecieveAnimData(byte[] data, CSteamID sender)
         {
-            RPCMethod method = (RPCMethod)data[0];
+            AnimType type =  (AnimType)data[0];
+            if (type == AnimType.NailAttack)
+            {
+                DeserializeNailAttack(data, sender);
+                return;
+            }
+            RPCMethod method = (RPCMethod)data[1];
             tk2dSpriteAnimator animator;
             SilksongModPlugin.Log.LogInfo($"Size of synced hornet: {LobbyManager.SyncedHornetScripts.Count}");
             if (LobbyManager.SyncedHornetScripts.TryGetValue(sender, out var hornet))
@@ -34,12 +41,22 @@ namespace SilksongMod
                 case RPCMethod.Stop:
                     DeserializeStop(animator);
                     break;
-                case RPCMethod.NailAttack:
-                    
                 default:
                     SilksongModPlugin.Log.LogError("Error: Unknown RPC Method");
                     break;
             }
+        }
+
+        public static void RecieveAttackData(byte[] data, CSteamID sender)
+        {
+            byte masks = data[0];
+            byte direction = data[1];
+            CollisionSide x = CollisionSide.left;
+            if (direction == 1) // right collider
+            {
+                x = CollisionSide.right;
+            }
+            LobbyManager.HeroController.TakeDamage(null, x, masks, HazardType.ENEMY);
         }
 
         public static void RecievePosData(byte[] data, CSteamID sender)
@@ -55,8 +72,10 @@ namespace SilksongMod
             {
                 Vector3 pos = reader.ReadVector3();
                 Vector3 scale = reader.ReadVector3();
-                Vector3 velo = reader.ReadVector3();
-                return new PlayerPosData(pos, scale, velo);
+                Vector2 velo = reader.ReadVector2();
+                Vector2 colliderOffset = reader.ReadVector2();
+                Vector2 colliderSize = reader.ReadVector2();
+                return new PlayerPosData(pos, scale, velo, colliderOffset, colliderSize);
             }
         }
         
@@ -67,12 +86,16 @@ namespace SilksongMod
             float z1 = reader.ReadSingle();
             return new Vector3(x1, y1, z1);
         }
-
-
-        private static void DeserializePlay(byte[] data, tk2dSpriteAnimator animator)
+        private static Vector3 ReadVector2(this BinaryReader reader)
         {
-            int offset = 1; // account for first 5 bytes
+            float x1 = reader.ReadSingle();
+            float y1 = reader.ReadSingle();
+            return new Vector2(x1, y1);
+        }
 
+
+        private static void DeserializePlay(byte[] data, tk2dSpriteAnimator animator, int offset = 2)
+        {
             // 3. String length (ushort)
             ushort stringLength = (ushort)((data[offset++] << 8) | data[offset++]);
 
@@ -96,9 +119,43 @@ namespace SilksongMod
             animator.Stop();
         }
 
-        private static void DeserializeNailAttack(byte[] data)
+        private static void DeserializeNailAttack(byte[] data, CSteamID sender)
         {
-            
+            NailAttackType type = (NailAttackType)data[1];
+            if (LobbyManager.SyncedHornetScripts.TryGetValue(sender, out var hornet))
+            {
+                if (type == NailAttackType.NailAttackEnable)
+                {
+                    byte index = data[2];
+                    byte active = data[3];
+                    hornet.ActivateNailAttack(index, active != 0);
+                }
+                else if (type == NailAttackType.Anim)
+                {
+                    byte index = data[2];
+                    tk2dSpriteAnimator animator = hornet.RetrieveAnimatorFromIndex(index);
+                    if (animator)
+                    {
+                        RPCMethod method = (RPCMethod)data[3];
+                        if (method == RPCMethod.Play)
+                        {
+                            DeserializePlay(data, animator, 4);
+                        }
+                        else if (method == RPCMethod.Stop)
+                        {
+                            DeserializeStop(animator);
+                        }
+                    }
+                    else
+                    {
+                        SilksongModPlugin.Log.LogError("Deserialize ERROR: Animator is null!!!");
+                    }
+                }
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("sender doesn't exist in dictionary what happened ._.");
+            }
         }
 
         public static void RecieveLobbyData(byte[] data, CSteamID sender)

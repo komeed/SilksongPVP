@@ -4,19 +4,45 @@ using UnityEngine;
 
 namespace SilksongMod
 {
-    [HarmonyPatch(typeof(HeroController), "Start")] 
+    [HarmonyPatch(typeof(HeroController), "Awake")] 
     public static class OnHornetSpawn
     {
         [HarmonyPostfix]
         public static void Postfix(HeroController __instance)
         {
-           // if (GlobalHost.HostEnabled)
-           // {
-                SilksongModPlugin.Log.LogInfo("Hornet Spawned!");
-                LobbyManager.SetHostHornet(__instance.gameObject);
-               // retrieve every 
-               LobbyManager.StoreNailAttackComponents(__instance.gameObject);
-               LobbyManager.ActivateHornets(true);
+            // if (GlobalHost.HostEnabled)
+            // {
+            SilksongModPlugin.Log.LogInfo(
+                "Hornet Spawned in Awake!"); // if this doesn't work simply use search component thing
+            LobbyManager.SetHostHornet(__instance.gameObject);
+            // retrieve every 
+            LobbyManager.StoreNailAttackComponents(__instance.gameObject);
+            LobbyManager.ActivateHornets(true);
+
+            List<ComponentObjectInfo> x = FindAllWithTagIncludingInactive("Nail Attack");
+            SilksongModPlugin.Log.LogInfo($"tags with nail attack: {x.Count}");
+            foreach (ComponentObjectInfo c in x)
+            {
+                SilksongModPlugin.Log.LogInfo(c);
+            }
+        }
+        
+        public static List<ComponentObjectInfo> FindAllWithTagIncludingInactive(string tag)
+        {
+            var result = new List<ComponentObjectInfo>();
+            foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                if (go.CompareTag(tag) && go.scene.IsValid())
+                {
+                    result.Add(new ComponentObjectInfo
+                    {
+                        Name = go.name,
+                        Tag = go.tag,
+                        ParentPath = ComponentFinder.GetParentPath(go.transform)
+                    });
+                }
+            }
+            return result;
         }
     }
     
@@ -56,7 +82,7 @@ namespace SilksongMod
             return results;
         }
 
-        private static string GetParentPath(Transform t)
+        public static string GetParentPath(Transform t)
         {
             if (t == null)
                 return string.Empty;

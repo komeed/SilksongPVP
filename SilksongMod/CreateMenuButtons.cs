@@ -39,6 +39,16 @@ namespace SilksongMod
  
             LobbyManager.CurrScene = "MAINMENU"; // set scene to main menu
             LobbyManager.ActivateHornets(false); // ensure all hornets are not active in main menu
+            var comps = GameObject.FindObjectsByType<HeroController>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None);
+            if (comps.IsNullOrEmpty())
+            {
+                SilksongModPlugin.Log.LogInfo("still can't find component!");
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("FOUND IT THAT'S GOOD");
+            }
         }
 
         public static void CreateHostButton(GameObject obj)

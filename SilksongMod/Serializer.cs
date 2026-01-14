@@ -10,16 +10,53 @@ namespace SilksongMod
 {
     public static class Serializer
     {
-        public static byte[] SerializePlay(string clipName, float clipTime, float fps)
+        public static byte[] SerializePlay(AnimType animType, string clipName, float clipTime, float fps)
         {
             // Encode string as UTF8
             byte[] stringBytes = Encoding.UTF8.GetBytes(clipName);
             if (stringBytes.Length > ushort.MaxValue)
                 throw new Exception("Clip name too long!");
 
-            byte[] data = new byte[1 + 2 + stringBytes.Length + 4 + 4];
+            byte[] data = new byte[1 + 1 + 2 + stringBytes.Length + 4 + 4];
 
             int offset = 0;
+            data[offset++] = (byte)animType;
+
+            // 1. Method enum
+            data[offset++] = (byte)RPCMethod.Play;
+
+            // 3. String length (ushort)
+            ushort len = (ushort)stringBytes.Length;
+            data[offset++] = (byte)(len >> 8);   // high byte
+            data[offset++] = (byte)(len & 0xFF); // low byte
+
+            // 4. String bytes
+            Buffer.BlockCopy(stringBytes, 0, data, offset, stringBytes.Length);
+            offset += stringBytes.Length;
+
+            // 5. clipTime (float)
+            Buffer.BlockCopy(BitConverter.GetBytes(clipTime), 0, data, offset, 4);
+            offset += 4;
+
+            // 6. fps (float)
+            Buffer.BlockCopy(BitConverter.GetBytes(fps), 0, data, offset, 4);
+
+            return data;
+        }
+        
+        public static byte[] SerializeNailPlay(int index, string clipName, float clipTime, float fps)
+        {
+            // Encode string as UTF8
+            byte[] stringBytes = Encoding.UTF8.GetBytes(clipName);
+            if (stringBytes.Length > ushort.MaxValue)
+                throw new Exception("Clip name too long!");
+
+            byte[] data = new byte[1 + 1 + 1 + 1 + 2 + stringBytes.Length + 4 + 4];
+
+            int offset = 0;
+            data[offset++] = (byte)AnimType.NailAttack;
+            data[offset++] = (byte)NailAttackType.Anim;
+            data[offset++] = (byte)index;
 
             // 1. Method enum
             data[offset++] = (byte)RPCMethod.Play;
@@ -43,12 +80,25 @@ namespace SilksongMod
             return data;
         }
 
-        public static byte[] SerializeStop()
+        public static byte[] SerializeStop(AnimType animType)
         {
-            byte[] data = new byte[1];
+            byte[] data = new byte[2];
 
+            data[0] = (byte)animType;
             // 1. Method enum
-            data[0] = (byte)RPCMethod.Stop;
+            data[1] = (byte)RPCMethod.Stop;
+
+            return data;
+        }
+        public static byte[] SerializeNailStop(AnimType animType, int index)
+        {
+            byte[] data = new byte[3];
+
+            data[0] = (byte)animType;
+            data[1] = (byte)NailAttackType.Anim;
+            data[2] = (byte)index;
+            // 1. Method enum
+            data[3] = (byte)RPCMethod.Stop;
 
             return data;
         }
@@ -127,7 +177,8 @@ namespace SilksongMod
                 writer.Write(posData.Position);
                 writer.Write(posData.LocalScale);
                 writer.Write(posData.Velocity);
-                
+                writer.Write(posData.ColliderOffset);
+                writer.Write(posData.ColliderSize);
                 return ms.ToArray();
             }
         }
@@ -137,6 +188,11 @@ namespace SilksongMod
             writer.Write(v.x);
             writer.Write(v.y);
             writer.Write(v.z);
+        }
+        private static void Write(this BinaryWriter writer, Vector2 v)
+        {
+            writer.Write(v.x);
+            writer.Write(v.y);
         }
 
         public static byte[] SerializeLeaveLobby(SteamPlayer player)

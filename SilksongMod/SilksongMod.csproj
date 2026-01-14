@@ -104,12 +104,15 @@
     <ItemGroup>
         <Compile Include="CreateMenuButtons.cs" />
         <Compile Include="Deserializer.cs" />
+        <Compile Include="Enums\AnimType.cs" />
         <Compile Include="Enums\LobbyCommands.cs" />
         <Compile Include="Enums\MethodCommandsEnum.cs" />
+        <Compile Include="Enums\NailAttackType.cs" />
         <Compile Include="Enums\P2PChannelEnum.cs" />
         <Compile Include="NetworkSender.cs" />
         <Compile Include="LobbyManager.cs" />
         <Compile Include="Patches\AttackPatch.cs" />
+        <Compile Include="Patches\DamagePatch.cs" />
         <Compile Include="Patches\OnEnterWorld.cs" />
         <Compile Include="Patches\OnHornetSpawn.cs" />
         <Compile Include="Patches\OnSceneLoad.cs" />
