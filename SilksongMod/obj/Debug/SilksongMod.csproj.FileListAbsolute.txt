@@ -119,3 +119,4 @@
 /Users/omeed/RiderProjects/SilksongMod/SilksongMod/obj/Debug/SilksongMod.pdb
 /Users/omeed/Library/Application Support/Steam/steamapps/common/Hollow Knight Silksong/BepInEx/plugins/SilksongMod.dll
 /Users/omeed/Library/Application Support/Steam/steamapps/common/Hollow Knight Silksong/BepInEx/plugins/SilksongMod.pdb
+/Users/omeed/RiderProjects/SilksongMod/SilksongMod/bin/Debug/Unity.TextMeshPro.dll

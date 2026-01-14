@@ -73,6 +73,9 @@
         <Reference Include="TeamCherry.TK2D">
           <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\TeamCherry.TK2D.dll</HintPath>
         </Reference>
+        <Reference Include="Unity.TextMeshPro">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\Unity.TextMeshPro.dll</HintPath>
+        </Reference>
         <Reference Include="UnityEngine">
           <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\UnityEngine.dll</HintPath>
         </Reference>
@@ -118,6 +121,7 @@
         <Compile Include="SyncedHornetScript.cs" />
         <Compile Include="TestMod.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="UI\ChatDisplay.cs" />
         <Compile Include="UI\InviteButtonScript.cs" />
         <Compile Include="UI\JoinDisplay.cs" />
         <Compile Include="UI\LobbyDisplay.cs" />

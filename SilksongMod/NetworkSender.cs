@@ -11,6 +11,9 @@ namespace SilksongMod
 
         private Rigidbody2D _rb;
 
+        Vector3 lastPhysicsPos;
+        Vector3 lastPhysicsVel;
+
         void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
@@ -27,12 +30,19 @@ namespace SilksongMod
             }
         }
 
+        void FixedUpdate()
+        {
+            lastPhysicsVel = _rb.linearVelocity;
+            lastPhysicsPos = _rb.position;
+        }
+        
+
         void SendNetworkUpdate()
         {
             if (LobbyManager.Players.Count > 1 && LobbyManager.CurrScene != "MAINMENU")
             {
                 //serialize position and scale (scale for direction, position for position)
-                byte[] data = Serializer.SerializePlayerPosData(new PlayerPosData(transform.position, transform.localScale, _rb.linearVelocity));
+                byte[] data = Serializer.SerializePlayerPosData(new PlayerPosData(lastPhysicsPos, transform.localScale, lastPhysicsVel));
                 foreach (KeyValuePair<SteamPlayer, string> playerData in LobbyManager.Players)
                 {
                     if (!playerData.Key.Equals(LobbyManager.CurrPlayer) &&
