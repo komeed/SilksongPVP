@@ -14,6 +14,8 @@ namespace SilksongMod
         public tk2dSpriteAnimator animator;
         private Rigidbody2D _rb;
 
+        public GameObject Attacks;
+
         private void Awake()
         {
             SilksongModPlugin.Log.LogInfo("SyncedHornetScript: Awake");
@@ -114,6 +116,12 @@ namespace SilksongMod
             animator.AnimationCompleted = hostAnimator.AnimationCompleted;
             animator.AnimationEventTriggered = hostAnimator.AnimationEventTriggered;
         }
-        
+
+        private static GameObject CreateNailAttacks(GameObject hornet)
+        {
+            GameObject Attacks = new GameObject("SyncedAttacks");
+            Attacks.transform.parent = hornet.transform;
+            return Attacks;
+        }
     }
 }

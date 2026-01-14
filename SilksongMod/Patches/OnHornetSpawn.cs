@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 
@@ -13,40 +14,61 @@ namespace SilksongMod
            // {
                 SilksongModPlugin.Log.LogInfo("Hornet Spawned!");
                 LobbyManager.SetHostHornet(__instance.gameObject);
-                LobbyManager.ActivateHornets(true);
-                PrintChildrenAndComponents(__instance.gameObject);
-           // }
+               // retrieve every 
+               LobbyManager.StoreNailAttackComponents(__instance.gameObject);
+               LobbyManager.ActivateHornets(true);
         }
-        
-        public static void PrintChildrenAndComponents(GameObject parent)
+    }
+    
+    public struct ComponentObjectInfo
+    {
+        public string Name;
+        public string Tag;
+        public string ParentPath;
+
+        public override string ToString()
         {
-            if (parent == null)
+            return $"Name: {Name}, Tag: {Tag}, Path: {ParentPath}";
+        }
+    }
+    
+    public static class ComponentFinder
+    {
+        public static List<ComponentObjectInfo> FindObjectsWithComponent<T>(bool includeInactive = false)
+            where T : MonoBehaviour
+        {
+            var results = new List<ComponentObjectInfo>();
+
+            T[] components = Object.FindObjectsOfType<T>(includeInactive);
+
+            foreach (T comp in components)
             {
-                SilksongModPlugin.Log.LogInfo("Parent GameObject is null.");
-                return;
+                GameObject go = comp.gameObject;
+
+                results.Add(new ComponentObjectInfo
+                {
+                    Name = go.name,
+                    Tag = go.tag,
+                    ParentPath = GetParentPath(go.transform)
+                });
             }
 
-            PrintChildRecursive(parent, 0);
+            return results;
         }
 
-        private static void PrintChildRecursive(GameObject obj, int indentLevel)
+        private static string GetParentPath(Transform t)
         {
-            string indent = new string(' ', indentLevel * 2); // indentation for hierarchy
-            SilksongModPlugin.Log.LogInfo($"{indent}GameObject: {obj.name}, Tag: {obj.tag}");
+            if (t == null)
+                return string.Empty;
 
-            // Print all components on this object
-            Component[] components = obj.GetComponents<Component>();
-            foreach (var comp in components)
+            var stack = new Stack<string>();
+            while (t != null)
             {
-                if (comp != null) // sometimes null if component missing
-                    SilksongModPlugin.Log.LogInfo($"{indent}  Component: {comp.GetType().Name}");
+                stack.Push(t.name);
+                t = t.parent;
             }
 
-            // Recursively print children
-            foreach (Transform child in obj.transform)
-            {
-                PrintChildRecursive(child.gameObject, indentLevel + 1);
-            }
+            return string.Join("/", stack);
         }
     }
 }

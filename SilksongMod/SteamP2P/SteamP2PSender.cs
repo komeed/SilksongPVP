@@ -67,18 +67,6 @@ namespace SilksongMod.SteamP2P
             }
         }
 
-        public static void SendAnimationChangeTo(SteamPlayer player, byte[] data)
-        {
-            if (SendData(player.SteamID, data, P2PChannel.Anim))
-            {
-                SilksongModPlugin.Log.LogInfo($"Successfully sent animation change to Player {player.Name}");
-            }
-            else
-            {
-                SilksongModPlugin.Log.LogError($"Failed to send animation change to Player {player.Name}");
-            }
-        }
-
         public static void SendPositionDataTo(SteamPlayer player, byte[] data)
         {
             if (SendData(player.SteamID, data, P2PChannel.Pos))

@@ -109,6 +109,7 @@
         <Compile Include="Enums\P2PChannelEnum.cs" />
         <Compile Include="NetworkSender.cs" />
         <Compile Include="LobbyManager.cs" />
+        <Compile Include="Patches\AttackPatch.cs" />
         <Compile Include="Patches\OnEnterWorld.cs" />
         <Compile Include="Patches\OnHornetSpawn.cs" />
         <Compile Include="Patches\OnSceneLoad.cs" />

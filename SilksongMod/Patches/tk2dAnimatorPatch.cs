@@ -16,7 +16,7 @@ namespace SilksongMod.tk2dAnimatorPatch
                 // if the current lobby contains more than just you
                 string name = clip.name; // serialize by name
                 byte[] data = Serializer.SerializePlay(name, clipStartTime, overrideFps);
-                LobbyManager.SendAnimationChangeToLobby(data);
+                LobbyManager.SendDataToLobby(data, P2PChannel.Anim);
             }
         }
     }
@@ -30,7 +30,7 @@ namespace SilksongMod.tk2dAnimatorPatch
             if (LobbyManager.Players.Count > 1 && LobbyManager.HostHornet == __instance.gameObject)
             {
                 byte[] data = Serializer.SerializeStop();
-                LobbyManager.SendAnimationChangeToLobby(data);
+                LobbyManager.SendDataToLobby(data, P2PChannel.Anim);
             }
         }
     }

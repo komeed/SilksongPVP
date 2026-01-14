@@ -31,6 +31,12 @@ namespace SilksongMod // canvas is transform.parent
         
         /// GLOBAL HOST INSTANCE VARIABLES ///
         public static Dictionary<CSteamID, SyncedHornetScript> SyncedHornetScripts = new Dictionary<CSteamID, SyncedHornetScript>();
+        
+        //public static Dictionary<CSteamID, byte> SlashGOToIndex = new Dictionary<CSteamID, byte>();
+
+        public static NailAttackBase[] NABList;
+
+        public static Dictionary<NailAttackBase, int> NABListIndex = new Dictionary<NailAttackBase, int>();
      //   public static Dictionary<CSteamID, GameObject> SyncedHornets = new Dictionary<CSteamID, GameObject>();
         
         public static GameObject HostHornet;
@@ -163,7 +169,7 @@ namespace SilksongMod // canvas is transform.parent
             CreateHornet(player.Key, player.Value);
         }
         
-        public static void SendAnimationChangeToLobby(byte[] data)
+        public static void SendDataToLobby(byte[] data, P2PChannel channel)
         {
             foreach (KeyValuePair<SteamPlayer, string> playerData in Players)
             {
@@ -171,7 +177,14 @@ namespace SilksongMod // canvas is transform.parent
                 {
                     if (playerData.Value.Equals(CurrScene) && CurrScene != "MAINMENU") // only if they are on the same scene, send
                     {
-                        SteamP2PSender.SendAnimationChangeTo(playerData.Key, data);
+                        if (SteamP2PSender.SendData(playerData.Key.SteamID, data, channel))
+                        {
+                            SilksongModPlugin.Log.LogInfo($"Successfully sent animation change to Player {playerData.Key.Name}");
+                        }
+                        else
+                        {
+                            SilksongModPlugin.Log.LogError($"Failed to send animation change to Player {playerData.Key.Name}");
+                        }
                     }
                 }
             }
@@ -290,6 +303,20 @@ namespace SilksongMod // canvas is transform.parent
             PendingLobbyBuffer.Clear();
             
             UpdateLobbyUI(); // Update lobby with current player stats
+        }
+
+        public static void StoreNailAttackComponents(GameObject hornet)
+        {
+            if (NABList.IsNullOrEmpty())
+            {
+                NABList =
+                    hornet.gameObject.GetComponentsInChildren<NailAttackBase>(true);
+            }
+            // used to retrieve the index with O(1) search instead of O(n)
+            for (int i = 0; i < NABList.Length; i++)
+            {
+                NABListIndex[NABList[i]] = i;
+            }
         }
         
         #endregion

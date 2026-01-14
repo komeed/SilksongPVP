@@ -34,6 +34,8 @@ namespace SilksongMod
                 case RPCMethod.Stop:
                     DeserializeStop(animator);
                     break;
+                case RPCMethod.NailAttack:
+                    
                 default:
                     SilksongModPlugin.Log.LogError("Error: Unknown RPC Method");
                     break;
@@ -92,6 +94,11 @@ namespace SilksongMod
         private static void DeserializeStop(tk2dSpriteAnimator animator)
         {
             animator.Stop();
+        }
+
+        private static void DeserializeNailAttack(byte[] data)
+        {
+            
         }
 
         public static void RecieveLobbyData(byte[] data, CSteamID sender)

@@ -8,6 +8,7 @@ namespace SilksongMod
         Pause = 4,
         Resume = 5,
         SetFrame = 6,
-        UpdateAnimation = 7
+        UpdateAnimation = 7,
+        NailAttack
     }
 }
