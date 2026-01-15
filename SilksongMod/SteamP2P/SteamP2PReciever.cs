@@ -54,7 +54,7 @@ namespace SilksongMod.SteamP2P
                     buffer = new byte[size];
                 }
                 SteamNetworking.ReadP2PPacket(buffer, size, out size, out CSteamID sender, (byte)P2PChannel.Pos);
-                SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
+              //  SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
                 Deserializer.RecievePosData(buffer, sender);
             }
             
@@ -66,7 +66,7 @@ namespace SilksongMod.SteamP2P
                 }
                 SteamNetworking.ReadP2PPacket(buffer, size, out size, out CSteamID sender, (byte)P2PChannel.Anim);
                 Deserializer.RecieveAnimData(buffer, sender);
-                SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
+                SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender} FOR ANIMATION");
             }
             while (SteamNetworking.IsP2PPacketAvailable(out size, (byte)P2PChannel.Attack)) // read Anim data
             {
@@ -76,7 +76,7 @@ namespace SilksongMod.SteamP2P
                 }
                 SteamNetworking.ReadP2PPacket(buffer, size, out size, out CSteamID sender, (byte)P2PChannel.Attack);
                 Deserializer.RecieveAttackData(buffer, sender);
-                SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender}");
+                SilksongModPlugin.Log.LogInfo($"Received {size} bytes from {sender} FOR ATTACK");
             }
         }
 

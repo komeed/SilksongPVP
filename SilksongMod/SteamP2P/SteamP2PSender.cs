@@ -71,7 +71,7 @@ namespace SilksongMod.SteamP2P
         {
             if (SendData(player.SteamID, data, P2PChannel.Pos))
             {
-                SilksongModPlugin.Log.LogInfo($"Successfully sent position data to Player {player.Name}");
+                //SilksongModPlugin.Log.LogInfo($"Successfully sent position data to Player {player.Name}");
             }
             else
             {

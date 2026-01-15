@@ -47,9 +47,17 @@ namespace SilksongMod.Patches
                     data[0] = (byte)AnimType.NailAttack;
                     data[1] = (byte)NailAttackType.NailAttackEnable;
                     data[2] = (byte)index;
-                    data[3] = 1; // 1 is turn on, 0 is turn off
+                    data[3] = 0; // 1 is turn on, 0 is turn off
                     LobbyManager.SendDataToLobby(data, P2PChannel.Anim);
                 }
+                else
+                {
+                    SilksongModPlugin.Log.LogInfo($"NABList doesn't contain the index for some reason??? Size of NabList: {LobbyManager.NABListIndex.Count}");
+                }
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("NABList is empty for osme raeson???");
             }
         }
     }

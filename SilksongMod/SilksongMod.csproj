@@ -115,6 +115,7 @@
         <Compile Include="Patches\DamagePatch.cs" />
         <Compile Include="Patches\OnEnterWorld.cs" />
         <Compile Include="Patches\OnHornetSpawn.cs" />
+        <Compile Include="Patches\OnNextLevelReadyPatch.cs" />
         <Compile Include="Patches\OnSceneLoad.cs" />
         <Compile Include="Patches\tk2dAnimatorPatch.cs" />
         <Compile Include="Serializer.cs" />

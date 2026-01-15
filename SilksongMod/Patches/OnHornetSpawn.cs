@@ -18,13 +18,6 @@ namespace SilksongMod
             // retrieve every 
             LobbyManager.StoreNailAttackComponents(__instance.gameObject);
             LobbyManager.ActivateHornets(true);
-
-            List<ComponentObjectInfo> x = FindAllWithTagIncludingInactive("Nail Attack");
-            SilksongModPlugin.Log.LogInfo($"tags with nail attack: {x.Count}");
-            foreach (ComponentObjectInfo c in x)
-            {
-                SilksongModPlugin.Log.LogInfo(c);
-            }
         }
         
         public static List<ComponentObjectInfo> FindAllWithTagIncludingInactive(string tag)

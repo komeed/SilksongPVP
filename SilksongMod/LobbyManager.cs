@@ -216,7 +216,7 @@ namespace SilksongMod // canvas is transform.parent
         public static void UpdateSceneForPlayer(SteamPlayer player, string scene) {
             Players[player] = scene; // update players dict
             SyncedHornetScript hornet = SyncedHornetScripts[player.SteamID];
-            hornet.gameObject.SetActive(scene != "MAINMENU" && CurrScene != "MAINMENU"); // set active only if changed
+            hornet.gameObject.SetActive(scene != "MAINMENU" && CurrScene != "MAINMENU" && scene == CurrScene); // set active only if changed
             SilksongModPlugin.Log.LogInfo($"Player {player.Name} joined {scene}");
         }
 
@@ -266,10 +266,6 @@ namespace SilksongMod // canvas is transform.parent
         
         private static void CreateHornet(SteamPlayer player, string scene)
         {
-            if (HostHornet == null)
-            {
-                SilksongModPlugin.Log.LogInfo("host hornet is null; we need to figure out a different way to do this.");
-            }
             GameObject syncedHornet = new GameObject("SyncedHornet");
             
             if (scene == CurrScene && CurrScene != "MAINMENU")
@@ -309,10 +305,7 @@ namespace SilksongMod // canvas is transform.parent
 
         public static void StoreNailAttackComponents(GameObject hornet)
         {
-            if (NABListIndex.IsNullOrEmpty())
-            {
-                return;
-            }
+            NABListIndex.Clear(); // clear everything because new memory references
             NailAttackBase[] NABList =
                     hornet.gameObject.GetComponentsInChildren<NailAttackBase>(true);
             // used to retrieve the index with O(1) search instead of O(n)

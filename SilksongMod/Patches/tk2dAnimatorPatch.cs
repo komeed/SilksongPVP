@@ -28,6 +28,7 @@ namespace SilksongMod.tk2dAnimatorPatch
                         if (LobbyManager.NABListIndex.TryGetValue(component, out int index))
                         {
                             byte[] data = Serializer.SerializeNailPlay(index, clip.name, clipStartTime, overrideFps);
+                            SilksongModPlugin.Log.LogInfo($"Sending Nail Attack to lobby! name: {__instance.gameObject.name}");
                             LobbyManager.SendDataToLobby(data, P2PChannel.Anim);
                         }
                         else

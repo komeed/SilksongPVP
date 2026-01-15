@@ -9,8 +9,7 @@ namespace SilksongMod.Patches
         [HarmonyPrefix]
         public static void Prefix(GameManager __instance, string unloadingSceneName, SceneLoad unloadingSceneLoad)
         {
-            SilksongModPlugin.Log.LogInfo("LOADING SCENE: " + unloadingSceneName);
-            LobbyManager.UpdateCurrSceneAndSend(unloadingSceneName);
+            
         }
     }
 }

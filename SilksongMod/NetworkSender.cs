@@ -7,7 +7,7 @@ namespace SilksongMod
 {
     public class NetworkSender : MonoBehaviour
     {
-        private const float SendInterval = 1f / 40f; // 20 Hz
+        private const float SendInterval = 1f / 30f; // 20 Hz
         private float _timer;
 
         private Rigidbody2D _rb;
@@ -34,7 +34,7 @@ namespace SilksongMod
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                LobbyManager.HeroController.TakeDamage(null, CollisionSide.left, 1, HazardType.ENEMY);
+                LobbyManager.HeroController.TakeDamage(null, CollisionSide.left, 2, HazardType.ENEMY);
             }
         }
 

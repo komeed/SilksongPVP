@@ -36,14 +36,14 @@ namespace SilksongMod
             {
                 SilksongModPlugin.Log.LogError("Could not find Host Hornet Sprite!");
             }
-            SilksongModPlugin.Log.LogInfo("Finished setting up Hornet.");
             CopyAnimatorFields();
             _rb = gameObject.AddComponent<Rigidbody2D>();
             _rb.gravityScale = 0;
             
             CreateNailAttacks();
-            _collider = gameObject.AddComponent<BoxCollider2D>();
-            CopyBoxCollider2D(_collider, LobbyManager.HostHornet);
+           // _collider = gameObject.AddComponent<BoxCollider2D>();
+          //  _collider.isTrigger = true;
+            SilksongModPlugin.Log.LogInfo("Finished setting up Hornet.");
         }
 
         private void Start()
@@ -61,8 +61,8 @@ namespace SilksongMod
             transform.position = posData.Position;
             transform.localScale = posData.LocalScale;
             _rb.linearVelocity = posData.Velocity;
-            _collider.size = posData.ColliderSize;
-            _collider.offset = posData.ColliderOffset;
+          //  _collider.size = posData.ColliderSize;
+          //  _collider.offset = posData.ColliderOffset;
         }
         
         private void DrawHornet(tk2dSprite original)
@@ -130,33 +130,63 @@ namespace SilksongMod
         private void CreateNailAttacks()
         {
             NailAttacks = new GameObject[LobbyManager.NABListIndex.Count]; // first initialize
-            
+            SilksongModPlugin.Log.LogInfo("Creating Nail Attacks for size: " + NailAttacks.Length);
             if (LobbyManager.AttacksBuffer != null)
             {
                 GameObject Attack = Instantiate(LobbyManager.AttacksBuffer, transform);
                 for (int i = 0; i < Attack.transform.childCount; i++) // add all children to thing
                 {
-                    GameObject child = Attack.transform.GetChild(i).gameObject;
-                    NailAttacks[i] = child;
+                    if (i >= 0 && i < NailAttacks.Length)
+                    {
+                        GameObject child = Attack.transform.GetChild(i).gameObject;
+                        NailAttacks[i] = child;
+                    }
+                    else
+                    {
+                        SilksongModPlugin.Log.LogInfo("the index is out of bounds. How could this hpapen??");
+                    }
                 }
                 return;
             }
             GameObject Attacks = new GameObject("SyncedNailAttacks");
             Attacks.transform.parent = transform;
-            Attacks.SetActive(false); // ensure it's not active
+            Attacks.SetActive(true); // ensure it's not active
 
             foreach (var NABIndex in LobbyManager.NABListIndex)
             {
                 GameObject hostAttack = NABIndex.Key.gameObject;
-                hostAttack.SetActive(false); // temporarily set it inactive 
+                bool wasActive = false;
+                if (hostAttack.activeSelf)
+                {
+                    hostAttack.SetActive(false);
+                    wasActive = true;
+                } // temporarily set it inactive 
+
                 GameObject nailAttack = Instantiate(hostAttack, Attacks.transform);
-                hostAttack.SetActive(true);
+                if (wasActive)
+                {
+                    hostAttack.SetActive(true);
+                }
+
                 if (nailAttack.activeSelf)
                 {
                     SilksongModPlugin.Log.LogInfo("ATTACK IS STILL ACTIVE, THIS FAILs");
                 }
                 RemoveAllButGraphics(nailAttack);
-                NailAttacks[NABIndex.Value] = nailAttack;
+                if (NABIndex.Value >= 0 && NABIndex.Value < NailAttacks.Length)
+                {
+                    NailAttacks[NABIndex.Value] = nailAttack;
+                }
+                else
+                {
+                    SilksongModPlugin.Log.LogInfo($"i found the problem OMG IS THIS IT? probably not {NABIndex.Value}");
+                }
+                nailAttack.SetActive(false);
+                MeshRenderer renderer = nailAttack.GetComponent<MeshRenderer>();
+                renderer.enabled = true;
+                tk2dSpriteAnimator animator =  nailAttack.GetComponent<tk2dSpriteAnimator>();
+                animator.enabled = true;
+                nailAttack.tag = "";
             }
             LobbyManager.AttacksBuffer = Attacks;
         }
@@ -181,8 +211,8 @@ namespace SilksongMod
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            if (other.gameObject.tag == "Nail Attack")
-            {
+            SilksongModPlugin.Log.LogInfo($"COLLIDER NAME: {other.gameObject.name}");
+           // {
                 byte direction = 0; // 0 is left, 1 is right
                 if (transform.position.x > other.transform.position.x)
                 {
@@ -191,12 +221,21 @@ namespace SilksongMod
                 SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data");
                 SteamP2PSender.SendData(steamID, new byte[2] {1, direction}, P2PChannel.Attack); // nail damage deals one mask,
                 // direction is which side the syncedhornet got hit
-            }
+         //   }
         }
 
         public void ActivateNailAttack(int index, bool active)
         {
-            NailAttacks[index].SetActive(active);
+            SilksongModPlugin.Log.LogInfo($"ActivateNailAttack called! for gameobject name: {NailAttacks[index].name} {active}");
+            if (index >= 0 && index < NailAttacks.Length)
+            {
+                SilksongModPlugin.Log.LogInfo($"Nail Attack tag: {NailAttacks[index].tag}");
+                NailAttacks[index].SetActive(active);
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogError("index is out of bounds IN ACTIVATENAILATTACK");
+            }
         }
 
         public tk2dSpriteAnimator RetrieveAnimatorFromIndex(int index)
@@ -235,11 +274,8 @@ namespace SilksongMod
             // Copy the main properties
             copy.offset = source.offset;
             copy.size = source.size;
-            copy.isTrigger = source.isTrigger;
-            copy.density = source.density;
-            copy.edgeRadius = source.edgeRadius;
-            copy.sharedMaterial = source.sharedMaterial;
-            copy.enabled = source.enabled;
+            copy.isTrigger = true;
+            SilksongModPlugin.Log.LogInfo("Copied Box Collider!");
         }
     }
 }
