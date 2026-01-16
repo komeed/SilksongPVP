@@ -12,7 +12,7 @@ namespace SilksongMod.tk2dAnimatorPatch
         [HarmonyPrefix]
         public static void Prefix(tk2dSpriteAnimator __instance, tk2dSpriteAnimationClip clip, float clipStartTime, float overrideFps)
         {
-            if (LobbyManager.Players.Count > 1 && LobbyManager.HostHornet == __instance.gameObject)
+            if (LobbyManager.LobbyPlayers.Count > 0 && LobbyManager.HostHornet == __instance.gameObject)
             {
                 // if the current lobby contains more than just you
                 string name = clip.name; // serialize by name
@@ -52,7 +52,7 @@ namespace SilksongMod.tk2dAnimatorPatch
         [HarmonyPrefix]
         public static void Prefix(tk2dSpriteAnimator __instance)
         {
-            if (LobbyManager.Players.Count > 1 && LobbyManager.HostHornet == __instance.gameObject)
+            if (LobbyManager.LobbyPlayers.Count > 0 && LobbyManager.HostHornet == __instance.gameObject)
             {
                 byte[] data = Serializer.SerializeStop(AnimType.Hornet);
                 LobbyManager.SendDataToLobby(data, P2PChannel.Anim);

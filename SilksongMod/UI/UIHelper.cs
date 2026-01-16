@@ -96,7 +96,7 @@ namespace SilksongMod
             return textGO;
         }
 
-         public static GameObject CreateButtonFromParent(GameObject parent, SteamPlayer player)
+         public static GameObject CreateButtonFromParent(GameObject parent, CSteamID steamID, string name)
          {
              // Create the button GameObject
              GameObject buttonGO = new GameObject("MyButton", typeof(RectTransform), typeof(Button), typeof(Image));
@@ -117,7 +117,7 @@ namespace SilksongMod
 
              // Add Button functionality
              Button button = buttonGO.GetComponent<Button>();
-             button.onClick.AddListener(() => InviteButtonScript.FriendButtonPressed(player));
+             button.onClick.AddListener(() => InviteButtonScript.FriendButtonPressed(steamID));
              button.interactable = true;
              
              // add outline
@@ -132,7 +132,7 @@ namespace SilksongMod
              textGO.transform.SetParent(buttonGO.transform, false);
 
              Text text = textGO.GetComponent<Text>();
-             text.text = $"Name: {player.Name} ({player.SteamID})";
+             text.text = $"Name: {name} ({steamID})";
              text.font = LobbyManager.DefaultFont; // default built-in font
              text.fontSize = 16;
              text.alignment = TextAnchor.MiddleCenter;

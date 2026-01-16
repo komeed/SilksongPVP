@@ -19,7 +19,8 @@ namespace SilksongMod
         private const float BUTTON_HEIGHT = 40f;
         private const float BUTTON_SPACING = 10f;
 
-        public static SteamPlayer player;
+        public static CSteamID currSteamID;
+        public static string currName;
 
         // Initialize the join display
         public static void Init(GameObject parent, Font font)
@@ -130,11 +131,12 @@ namespace SilksongMod
         public static Button GetRightButton() => cancelButton;
 
         // Utility methods
-        public static void SetText(SteamPlayer p)
+        public static void SetText(CSteamID sender, string name)
         {
             if (displayText != null)
-                displayText.text = $"Join {p.Name}'s Lobby?";
-            player = p;
+                displayText.text = $"Join {name}'s Lobby?";
+            currSteamID = sender;
+            currName = name;
         }
 
         public static void SetVisible(bool visible)

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using GlobalEnums;
 using SilksongMod.Enums;
+using SilksongMod.SteamP2P;
 using Steamworks;
 using UnityEngine;
 using UnityEngine.UI;
@@ -22,8 +23,8 @@ namespace SilksongMod
             }
             RPCMethod method = (RPCMethod)data[1];
             tk2dSpriteAnimator animator;
-            SilksongModPlugin.Log.LogInfo($"Size of synced hornet: {LobbyManager.SyncedHornetScripts.Count}");
-            if (LobbyManager.SyncedHornetScripts.TryGetValue(sender, out var hornet))
+            //SilksongModPlugin.Log.LogInfo($"Size of synced hornet: {LobbyManager.LobbyPlayers.Count}");
+            if (LobbyManager.LobbyPlayers.TryGetValue(sender, out var hornet))
             {
                 animator = hornet.animator;
             }
@@ -122,7 +123,7 @@ namespace SilksongMod
         private static void DeserializeNailAttack(byte[] data, CSteamID sender)
         {
             NailAttackType type = (NailAttackType)data[1];
-            if (LobbyManager.SyncedHornetScripts.TryGetValue(sender, out var hornet))
+            if (LobbyManager.LobbyPlayers.TryGetValue(sender, out var hornet))
             {
                 if (type == NailAttackType.NailAttackEnable)
                 {
@@ -164,37 +165,33 @@ namespace SilksongMod
             SilksongModPlugin.Log.LogInfo($"Recieved with Lobby Command {lobbyCommand}");
             if (lobbyCommand == LobbyCommand.LobbyDictToJoin)
             {
-                Dictionary<SteamPlayer, string> result = DeserializeDictionary(data);
-                LobbyManager.CreateJoin(new SteamPlayer(SteamFriends.GetFriendPersonaName(sender), sender)); // create the join
+                Dictionary<CSteamID, string> result = DeserializeDictionary(data);
                 LobbyManager.PendingLobbyBuffer = result; //set this temporarily so it doesn't go away
-            }
-            else if (lobbyCommand == LobbyCommand.LobbyDict)
-            {
-                Dictionary<SteamPlayer, string> result = DeserializeDictionary(data);
-                LobbyManager.MoveToNewLobby(result);
+                LobbyManager.CreateJoin(sender, result); // create the join
             }
             else if (lobbyCommand == LobbyCommand.PlayerJoined)
             {
                 SilksongModPlugin.Log.LogInfo($"Recieved player join lobby command from SteamID {sender}");
-                KeyValuePair<SteamPlayer, string> playerData = DeserializeSinglePlayerData(data);
+                (CSteamID, string, string) playerData = DeserializeSinglePlayerData(data); 
                 LobbyManager.AddPlayerToLobby(playerData);
-                LobbyManager.UpdateLobbyUI();
+                //next, send your current scene over to that person who you've just added
+                SteamP2PSender.SendCurrSceneToPlayer(sender, LobbyManager.CurrScene);
             }
             else if (lobbyCommand == LobbyCommand.SceneChange)
             {
                 string scene = DeserializeScene(data);
-                LobbyManager.UpdateSceneForPlayer(new SteamPlayer("temp", sender), scene);
+                LobbyManager.UpdateSceneForPlayer(sender, scene);
             }
             else if (lobbyCommand == LobbyCommand.LeaveLobby)
             {
-                SteamPlayer playerLeft = DeserializeLeaveLobby(data);
-                LobbyManager.LeaveRecievedFromPlayer(playerLeft);
+                LobbyManager.LeaveRecievedFromPlayer(sender);
             }
         }
 
-        private static Dictionary<SteamPlayer, string> DeserializeDictionary(byte[] data)
+        //currently only holding steam id and name
+        private static Dictionary<CSteamID, string> DeserializeDictionary(byte[] data)
         {
-            var result = new Dictionary<SteamPlayer, string>();
+            var result = new Dictionary<CSteamID, string>();
 
             // Skip the first byte (header) if needed
             using (MemoryStream ms = new MemoryStream(data, 1, data.Length - 1))
@@ -207,24 +204,19 @@ namespace SilksongMod
                 {
                     // 1️⃣ SteamID
                     ulong steamIdRaw = reader.ReadUInt64();
-                    CSteamID steamId = new CSteamID(steamIdRaw);
+                    CSteamID steamID = new CSteamID(steamIdRaw);
 
                     // 2️⃣ Name
                     string name = reader.ReadString();
-
-                    // 3️⃣ Extra string stored in the dictionary
-                    string extraValue = reader.ReadString();
-
-                    // Create SteamPlayer and add to dictionary
-                    var player = new SteamPlayer(name, steamId);
-                    result[player] = extraValue;
+                    
+                    result[steamID] = name;
                 }
             }
 
             return result;
         }
         
-        private static KeyValuePair<SteamPlayer, string> DeserializeSinglePlayerData(byte[] data)
+        private static (CSteamID, string, string) DeserializeSinglePlayerData(byte[] data)
         {
             // Skip the first byte (header)
             using (MemoryStream ms = new MemoryStream(data, 1, data.Length - 1))
@@ -241,7 +233,7 @@ namespace SilksongMod
                 string scene = reader.ReadString();
 
                 // 3️⃣ Construct SteamPlayer
-                return new KeyValuePair<SteamPlayer, string>(new SteamPlayer(name, steamId), scene);
+                return (steamId, name, scene);
             }
         }
         
@@ -255,23 +247,6 @@ namespace SilksongMod
 
                 // Read scene name
                 return reader.ReadString();
-            }
-        }
-
-        private static SteamPlayer DeserializeLeaveLobby(byte[] data)
-        {
-            using (MemoryStream ms = new MemoryStream(data, 1, data.Length - 1))
-            using (BinaryReader reader = new BinaryReader(ms))
-            {
-                // 1️⃣ Read SteamID (ulong)
-                ulong steamIdRaw = reader.ReadUInt64();
-                CSteamID steamId = new CSteamID(steamIdRaw);
-
-                // 2️⃣ Read player name (string)
-                string name = reader.ReadString();
-
-                // 3️⃣ Construct SteamPlayer
-                return new SteamPlayer(name, steamId);
             }
         }
 

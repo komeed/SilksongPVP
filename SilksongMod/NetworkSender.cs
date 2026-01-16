@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using GlobalEnums;
 using SilksongMod.SteamP2P;
+using Steamworks;
 using UnityEngine;
 
 namespace SilksongMod
@@ -47,18 +48,11 @@ namespace SilksongMod
 
         void SendNetworkUpdate()
         {
-            if (LobbyManager.Players.Count > 1 && LobbyManager.CurrScene != "MAINMENU")
+            if (!LobbyManager.LobbyPlayers.IsNullOrEmpty() && LobbyManager.CurrScene != "MAINMENU")
             {
                 //serialize position and scale (scale for direction, position for position)
                 byte[] data = Serializer.SerializePlayerPosData(new PlayerPosData(transform, _rb, _collider));
-                foreach (KeyValuePair<SteamPlayer, string> playerData in LobbyManager.Players)
-                {
-                    if (!playerData.Key.Equals(LobbyManager.CurrPlayer) &&
-                        playerData.Value.Equals(LobbyManager.CurrScene))
-                    {
-                        SteamP2PSender.SendPositionDataTo(playerData.Key, data);
-                    }
-                }
+                LobbyManager.SendDataToLobby(data, P2PChannel.Pos);
             }
         }
     }

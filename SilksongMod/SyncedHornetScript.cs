@@ -14,6 +14,7 @@ namespace SilksongMod
     {
         public CSteamID steamID;
         public string name; // for later name above hornet implementation
+        public string scene;
         
         public tk2dSpriteAnimator animator;
         private Rigidbody2D _rb;
@@ -26,7 +27,9 @@ namespace SilksongMod
             SilksongModPlugin.Log.LogInfo("SyncedHornetScript: Awake");
             if (LobbyManager.HostHornet == null)
             {
-                SilksongModPlugin.Log.LogError("Awake: Could not find Host Hornet!");
+                SilksongModPlugin.Log.LogError("Awake: Could not find Host Hornet! disabling");
+                gameObject.SetActive(false);
+                return;
             }
             
             if (LobbyManager.HostHornet.TryGetComponent<tk2dSprite>(out var sprite))

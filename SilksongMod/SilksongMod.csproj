@@ -122,7 +122,6 @@
         <Compile Include="SteamP2P\SteamP2PReciever.cs" />
         <Compile Include="SteamP2P\SteamP2PSender.cs" />
         <Compile Include="Structs\PlayerPosData.cs" />
-        <Compile Include="Structs\SteamPlayer.cs" />
         <Compile Include="SyncedHornetScript.cs" />
         <Compile Include="TestMod.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>

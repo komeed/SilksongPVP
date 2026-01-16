@@ -23,14 +23,13 @@ namespace SilksongMod.SteamP2P
             SteamNetworking.AcceptP2PSessionWithUser(sender); // immediately accept, but show join when lobby received
             
             SilksongModPlugin.Log.LogInfo($"Accepted {name}'s Session Request!");
-            // open join menu
-            LobbyManager.CreateJoin(new SteamPlayer(name, sender));
         }
         
         private void OnP2PSessionConnectFail(P2PSessionConnectFail_t fail)
         {
             SilksongModPlugin.Log.LogInfo($"P2P session failed with user {fail.m_steamIDRemote}");
             SilksongModPlugin.Log.LogInfo($"Reason: {fail.m_eP2PSessionError}");
+            LobbyManager.LeaveRecievedFromPlayer(fail.m_steamIDRemote);
         }
 
         void Update()

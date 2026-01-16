@@ -103,7 +103,7 @@ namespace SilksongMod
             return data;
         }
         
-        public static byte[] SerializeLobbyInfo(Dictionary<SteamPlayer, string> dict)
+        public static byte[] SerializeLobbyInfo(Dictionary<CSteamID, SyncedHornetScript> dict)
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -113,21 +113,21 @@ namespace SilksongMod
                     writer.Write((byte)LobbyCommand.LobbyDict);
 
                     // Number of entries
-                    writer.Write(dict.Count);
+                    writer.Write(dict.Count + 1); // include the current player
+                    
+                    //Write the current player's steam id and name (so we know the sending player's name)
+                    writer.Write(LobbyManager.CurrSteamID.m_SteamID);
+                    
+                    writer.Write(LobbyManager.CurrName);
 
                     // Write each SteamPlayer + associated string
-                    foreach (KeyValuePair<SteamPlayer, string> kvp in dict)
+                    foreach (SyncedHornetScript script in dict.Values)
                     {
-                        SteamPlayer player = kvp.Key;
-
                         // 1️⃣ SteamID
-                        writer.Write(player.SteamID.m_SteamID);
+                        writer.Write(script.steamID.m_SteamID);
 
                         // 2️⃣ Name
-                        writer.Write(player.Name ?? string.Empty);
-
-                        // 3️⃣ Extra string stored in dictionary (e.g., role / status)
-                        writer.Write(kvp.Value ?? string.Empty);
+                        writer.Write(script.name ?? string.Empty);
                     }
                 }
 
@@ -135,7 +135,7 @@ namespace SilksongMod
             }
         }
 
-        public static byte[] SerializeSinglePlayer(SteamPlayer player, string currScene)
+        public static byte[] SerializeSinglePlayer(CSteamID steamID, string name, string currScene)
         {
             using (MemoryStream ms = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(ms))
@@ -144,10 +144,10 @@ namespace SilksongMod
                 writer.Write((byte)LobbyCommand.PlayerJoined);
 
                 // 2️⃣ Write SteamID (ulong = 8 bytes)
-                writer.Write(player.SteamID.m_SteamID);
+                writer.Write(steamID.m_SteamID);
 
                 // 3️⃣ Write player name (string, variable length)
-                writer.Write(player.Name ?? string.Empty);
+                writer.Write(name ?? string.Empty);
                 
                 // Write player current scene (string)
                 writer.Write(currScene);
@@ -195,23 +195,9 @@ namespace SilksongMod
             writer.Write(v.y);
         }
 
-        public static byte[] SerializeLeaveLobby(SteamPlayer player)
+        public static byte[] SerializeLeaveLobby()
         {
-            using (MemoryStream ms = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(ms))
-            {
-                // 1️⃣ Write packet type header (1 byte)
-                writer.Write((byte)LobbyCommand.LeaveLobby);
-
-                // 2️⃣ Write SteamID (ulong = 8 bytes)
-                writer.Write(player.SteamID.m_SteamID);
-
-                // 3️⃣ Write player name (string, variable length)
-                writer.Write(player.Name ?? string.Empty);
-
-                // Return the byte array
-                return ms.ToArray();
-            }
+            return new byte[1] {(byte)LobbyCommand.LeaveLobby};
         }
         //public static byte[] 
     }

@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using HutongGames.PlayMaker.Actions;
+using Steamworks;
 
 namespace SilksongMod
 {
@@ -40,18 +41,14 @@ namespace SilksongMod
             font = f;
         }
 
-        public static void UpdatePlayerList(Dictionary<SteamPlayer, string> players, int fontSize = 16)
-        { // TODO: Fix code later? idk, it only happens ever so often so who cares
+        public static void UpdatePlayerList(Dictionary<CSteamID, SyncedHornetScript> players, int fontSize = 16)
+        { 
             ClearAll();
-
             AddText("Lobby:", fontSize + 2);
-            foreach (SteamPlayer player in players.Keys)
+            CreateLeaveButton(AddText(LobbyManager.CurrName, fontSize).gameObject, fontSize);
+            foreach (KeyValuePair<CSteamID, SyncedHornetScript> player in players)
             {
-                Text t = AddText(player.Name, fontSize);
-                if (player.Equals(LobbyManager.CurrPlayer)) // if current player, add the leave button
-                {
-                    CreateLeaveButton(t.gameObject, fontSize);
-                }
+                AddText(player.Value.name, fontSize);
             }
         }
         // Add a new notification text

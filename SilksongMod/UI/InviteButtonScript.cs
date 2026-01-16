@@ -9,15 +9,15 @@ namespace SilksongMod
 {
     public static class InviteButtonScript
     {
-        private static HashSet<SteamPlayer> friendsAdded;
+        private static HashSet<CSteamID> friendsAdded;
         
-        private static Dictionary<SteamPlayer, GameObject> buttonMap; 
+        private static Dictionary<CSteamID, GameObject> buttonMap; 
         private static GameObject overlayRoot;
         
         public static void CreateVerticalLayout(GameObject parent)
         {
-            buttonMap = new Dictionary<SteamPlayer, GameObject>();
-            friendsAdded = new HashSet<SteamPlayer>();
+            buttonMap = new Dictionary<CSteamID, GameObject>();
+            friendsAdded = new HashSet<CSteamID>();
             // 1. Create the container GameObject
             overlayRoot = UIHelper.CreateBlank(parent);
             GameObject container = UIHelper.CreateContainer(overlayRoot);
@@ -27,12 +27,11 @@ namespace SilksongMod
             {
                 CSteamID friendSteamID = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagImmediate);
                 string friendName = SteamFriends.GetFriendPersonaName(friendSteamID);
-                SteamPlayer p = new SteamPlayer(friendName, friendSteamID);
 
                 SilksongModPlugin.Log.LogInfo("Showing friend " + friendName);
                 
-                GameObject button = UIHelper.CreateButtonFromParent(container, p);
-                buttonMap.Add(p, button);
+                GameObject button = UIHelper.CreateButtonFromParent(container, friendSteamID, friendName);
+                buttonMap.Add(friendSteamID, button);
             }
 
             UIHelper.CreateDoneButton(container);
@@ -45,7 +44,7 @@ namespace SilksongMod
             }
         }
 
-        public static void FriendButtonPressed(SteamPlayer player)
+        public static void FriendButtonPressed(CSteamID player)
         {
             GameObject button = buttonMap[player];
             if (button == null)
@@ -68,13 +67,13 @@ namespace SilksongMod
 
         public static void DonePressed()
         {
-            foreach (SteamPlayer player in friendsAdded)
+            foreach (CSteamID player in friendsAdded)
             { 
-                if (!LobbyManager.Players.ContainsKey(player)) // if current lobby doesn't have this friend
+                if (!LobbyManager.LobbyPlayers.ContainsKey(player)) // if current lobby doesn't have this friend
                 {
                     //send the current lobby info (players hashmap)
                     LobbyManager.SendLobbyToPlayerWithJoin(player);
-                    SilksongModPlugin.Log.LogInfo($"SENT JOIN REQUEST TO FRIEND: {player.Name} ({player.SteamID})");
+                    SilksongModPlugin.Log.LogInfo($"SENT JOIN REQUEST TO FRIEND: {player})");
                     //LobbyManager.AddPlayerToLobby(steamID, friendName);
                   //  LobbyManager.PendingPlayer.Add(steamID); // first, add player to "pending" (we don't know if he accepts yet)
                 }
