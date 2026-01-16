@@ -15,8 +15,8 @@ namespace SilksongMod.Patches
             {
                 if (LobbyManager.NABListIndex.TryGetValue(__instance, out int index))
                 {
-                    SilksongModPlugin.Log.LogInfo(
-                        $"StartSlash called! instance name: {__instance.gameObject.name}, parent name: {__instance.gameObject.transform.parent.name}");
+                   // SilksongModPlugin.Log.LogInfo(
+                      //  $"StartSlash called! instance name: {__instance.gameObject.name}, parent name: {__instance.gameObject.transform.parent.name}");
                     //send the index over to steam p2p to every person in lobby
                     byte[] data = new byte[4];
                     data[0] = (byte)AnimType.NailAttack;
@@ -40,8 +40,8 @@ namespace SilksongMod.Patches
             {
                 if (LobbyManager.NABListIndex.TryGetValue(__instance, out int index))
                 {
-                    SilksongModPlugin.Log.LogInfo(
-                        $"StartSlash called! instance name: {__instance.gameObject.name}, parent name: {__instance.gameObject.transform.parent.name}");
+                   // SilksongModPlugin.Log.LogInfo(
+                    //    $"StartSlash called! instance name: {__instance.gameObject.name}, parent name: {__instance.gameObject.transform.parent.name}");
                     //send the index over to steam p2p to every person in lobby
                     byte[] data = new byte[4];
                     data[0] = (byte)AnimType.NailAttack;

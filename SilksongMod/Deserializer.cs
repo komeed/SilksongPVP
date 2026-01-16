@@ -178,6 +178,7 @@ namespace SilksongMod
                 SilksongModPlugin.Log.LogInfo($"Recieved player join lobby command from SteamID {sender}");
                 KeyValuePair<SteamPlayer, string> playerData = DeserializeSinglePlayerData(data);
                 LobbyManager.AddPlayerToLobby(playerData);
+                LobbyManager.UpdateLobbyUI();
             }
             else if (lobbyCommand == LobbyCommand.SceneChange)
             {

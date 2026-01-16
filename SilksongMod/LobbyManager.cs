@@ -12,6 +12,14 @@ using Object = System.Object;
 
 // ALERT: LOBBY INCLUDES YOURSELF
 
+/*
+ * GamePlan:
+ * - Remove syncedhornetscript and have the dictionary be steam player -> syncedhornetscript
+ * - have syncedhornetscript be the one containing the scene info
+ * lightens memory and lookup
+ * - however, we have to update many things, including deserialization
+ */
+
 namespace SilksongMod // canvas is transform.parent
 {
     public class LobbyManager : MonoBehaviour
@@ -29,13 +37,13 @@ namespace SilksongMod // canvas is transform.parent
         //temporary buffer that stores the lobby sent until the user presses join (which lets him join this lobby)
         public static Dictionary<SteamPlayer, string> PendingLobbyBuffer = new Dictionary<SteamPlayer, string>();
         
-        /// GLOBAL HOST INSTANCE VARIABLES ///
         public static Dictionary<CSteamID, SyncedHornetScript> SyncedHornetScripts = new Dictionary<CSteamID, SyncedHornetScript>();
         
         public static Dictionary<NailAttackBase, int> NABListIndex = new Dictionary<NailAttackBase, int>();
      //   public static Dictionary<CSteamID, GameObject> SyncedHornets = new Dictionary<CSteamID, GameObject>();
         
         public static GameObject HostHornet;
+        public static bool HostHornetActive;
         public static HeroController HeroController;
 
         public static GameObject AttacksBuffer;
@@ -188,9 +196,47 @@ namespace SilksongMod // canvas is transform.parent
         
         public static void ActivateHornets(bool active)
         {
+            HostHornetActive = true;
             foreach (SyncedHornetScript hornet in SyncedHornetScripts.Values)
             {
                 hornet.gameObject.SetActive(active);
+            }
+        }
+
+        private static void CheckHornetActive(GameObject hornet, string scene)
+        {
+            if (HostHornetActive)
+            {
+                if (scene == CurrScene && scene != "MAINMENU")
+                {
+                    hornet.SetActive(true);
+                }
+                else
+                {
+                    hornet.SetActive(false);
+                }
+            }
+        }
+
+        private static void CheckSyncedHornetsActive()
+        {
+            foreach (SyncedHornetScript hornet in SyncedHornetScripts.Values)
+            {
+                //CheckHornetActive(hornet.gameObject, );
+            }
+            if (HostHornetActive)
+            {
+                foreach (SyncedHornetScript hornet in SyncedHornetScripts.Values)
+                {
+                    
+                }
+            }
+            else
+            {
+                foreach (SyncedHornetScript hornet in SyncedHornetScripts.Values)
+                {
+                    
+                }
             }
         }
         

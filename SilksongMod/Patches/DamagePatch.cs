@@ -6,21 +6,41 @@ using UnityEngine;
 
 namespace SilksongMod.Patches
 {
-/*
-    [HarmonyPatch(typeof(HeroController))]
-    [HarmonyPatch("TakeDamage",
-        new[]
-        {
-            typeof(GameObject), typeof(CollisionSide), typeof(int), typeof(HazardType), typeof(DamagePropertyFlags)
-        })]
+
+    [HarmonyPatch(typeof(DamageEnemies))]
+    [HarmonyPatch("OnTriggerEnter2D", new[] { typeof(Collider2D) })]
     public class DamagePatch
     {
         [HarmonyPrefix]
-        public static void Prefix(NailAttackBase __instance, GameObject go, CollisionSide damageSide, int damageAmount,
-            HazardType hazardType,
-            DamagePropertyFlags damagePropertyFlags = DamagePropertyFlags.None) // function called upon entering
+        public static bool Prefix(DamageEnemies __instance, Collider2D collision) 
         {
-            //SilksongModPlugin.Log.LogInfo($"Player took damage! go: {go.name}, damage side: {damageSide}, damageAmount: {damageAmount}, hazardtype: {hazardType}, damagePropertyFlags: {damagePropertyFlags}");
+            SilksongModPlugin.Log.LogInfo($"TriggerEnter2D: hit some object! idk what. Curr Object: trigger: {__instance.gameObject.GetComponent<Collider2D>().isTrigger}");
+            PhysLayers layer = (PhysLayers)((Component)(object)collision).gameObject.layer;
+            SilksongModPlugin.Log.LogInfo($"Layer of object: {layer}");
+            if (collision.gameObject.TryGetComponent<SyncedHornetScript>(out var script))
+            {
+                SilksongModPlugin.Log.LogInfo("hit synced hornet! sending hit");
+                script.TakeDamage();
+                return false;
+            }
+
+            return true;
         }
-    }*/
+    }
+    
+    [HarmonyPatch(typeof(DamageEnemies))]
+    [HarmonyPatch("OnCollisionEnter2D", new[] { typeof(Collision2D) })]
+    public class CollisionPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(DamageEnemies __instance, Collision2D collision) 
+        {
+            SilksongModPlugin.Log.LogInfo($"CollisionEnter2D: hit some object! idk what. Curr Object: trigger: {__instance.gameObject.GetComponent<Collider2D>().isTrigger}");
+            if (collision.gameObject.TryGetComponent<SyncedHornetScript>(out var script))
+            {
+                SilksongModPlugin.Log.LogInfo("hit synced hornet! sending hit");
+                script.TakeDamage();
+            }
+        }
+    }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GlobalEnums;
 using SilksongMod.SteamP2P;
 using Steamworks;
 using UnityEngine;
@@ -41,9 +42,10 @@ namespace SilksongMod
             _rb.gravityScale = 0;
             
             CreateNailAttacks();
-           // _collider = gameObject.AddComponent<BoxCollider2D>();
-          //  _collider.isTrigger = true;
+            _collider = gameObject.AddComponent<BoxCollider2D>();
+            CopyBoxCollider2D(_collider, transform.gameObject);
             SilksongModPlugin.Log.LogInfo("Finished setting up Hornet.");
+            gameObject.layer = (int)PhysLayers.GRASS;
         }
 
         private void Start()
@@ -209,19 +211,16 @@ namespace SilksongMod
             }
         }
 
-        private void OnTriggerEnter2D(Collider2D other)
+        public void TakeDamage()
         {
-            SilksongModPlugin.Log.LogInfo($"COLLIDER NAME: {other.gameObject.name}");
-           // {
-                byte direction = 0; // 0 is left, 1 is right
-                if (transform.position.x > other.transform.position.x)
-                {
-                    direction = 1;
-                }
-                SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data");
-                SteamP2PSender.SendData(steamID, new byte[2] {1, direction}, P2PChannel.Attack); // nail damage deals one mask,
-                // direction is which side the syncedhornet got hit
-         //   }
+            byte direction = 1; // 0 is left, 1 is right
+            if (transform.position.x > LobbyManager.HostHornet.transform.position.x)
+            {
+                direction = 0;
+            }
+            SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data");
+            SteamP2PSender.SendData(steamID, new byte[2] {1, direction}, P2PChannel.Attack); // nail damage deals one mask,
+            // direction is which side the syncedhornet got hit
         }
 
         public void ActivateNailAttack(int index, bool active)
@@ -275,6 +274,7 @@ namespace SilksongMod
             copy.offset = source.offset;
             copy.size = source.size;
             copy.isTrigger = true;
+            copy.enabled = true;
             SilksongModPlugin.Log.LogInfo("Copied Box Collider!");
         }
     }
