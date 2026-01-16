@@ -23,15 +23,24 @@ namespace SilksongMod
             GameObject container = UIHelper.CreateContainer(overlayRoot);
             UIHelper.CreateInviteFriendsText(container);
             int friendCount = SteamFriends.GetFriendCount(EFriendFlags.k_EFriendFlagImmediate);
+
             for (int i = 0; i < friendCount; i++)
             {
                 CSteamID friendSteamID = SteamFriends.GetFriendByIndex(i, EFriendFlags.k_EFriendFlagImmediate);
-                string friendName = SteamFriends.GetFriendPersonaName(friendSteamID);
+    
+                // Check if friend is playing a game
+                if (SteamFriends.GetFriendGamePlayed(friendSteamID, out FriendGameInfo_t gameInfo))
+                {
+                    // Filter by AppID
+                    if (gameInfo.m_gameID.AppID() == new AppId_t(1030300)) // only if they are playing silksoing right now
+                    {
+                        string friendName = SteamFriends.GetFriendPersonaName(friendSteamID);
+                        SilksongModPlugin.Log.LogInfo("Showing friend playing the game: " + friendName);
 
-                SilksongModPlugin.Log.LogInfo("Showing friend " + friendName);
-                
-                GameObject button = UIHelper.CreateButtonFromParent(container, friendSteamID, friendName);
-                buttonMap.Add(friendSteamID, button);
+                        GameObject button = UIHelper.CreateButtonFromParent(container, friendSteamID, friendName);
+                        buttonMap.Add(friendSteamID, button);
+                    }
+                }
             }
 
             UIHelper.CreateDoneButton(container);

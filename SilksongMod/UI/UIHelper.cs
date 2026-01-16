@@ -67,34 +67,39 @@ namespace SilksongMod
 
         public static GameObject CreateInviteFriendsText(GameObject parent)
         {
-            // 1. Create the GameObject
-            GameObject textGO = new GameObject("InviteFriendsText", typeof(RectTransform), typeof(Text));
-            textGO.transform.SetParent(parent.transform, false); // Set parent without changing local transform
+            GameObject textGO = new GameObject(
+                "InviteFriendsText",
+                typeof(RectTransform),
+                typeof(Text),
+                typeof(LayoutElement)
+            );
 
-            // 2. Configure RectTransform
+            textGO.transform.SetParent(parent.transform, false);
+
             RectTransform rt = textGO.GetComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(600, 100);             // Width x height
-            rt.anchorMin = new Vector2(0.5f, 1f);            // Top-center
-            rt.anchorMax = new Vector2(0.5f, 1f);
-            rt.pivot = new Vector2(0.5f, 1f);               // Pivot at top center
-            rt.anchoredPosition = new Vector2(0, -50);      // Offset down a bit from top
-            
-            LayoutElement le = textGO.AddComponent<LayoutElement>();
+            rt.sizeDelta = new Vector2(600, 140);
+
+            LayoutElement le = textGO.GetComponent<LayoutElement>();
             le.preferredWidth = 600;
-            le.preferredHeight = 100;
+            le.preferredHeight = 140;
 
-            // 3. Configure Text
             Text txt = textGO.GetComponent<Text>();
-            txt.text = "Invite Friends";
-            txt.fontSize = 48;                               // Big text
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
 
-            // 4. Assign font
+            txt.supportRichText = true;
+            txt.alignment = TextAnchor.MiddleCenter;
             txt.font = LobbyManager.DefaultFont;
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            txt.verticalOverflow = VerticalWrapMode.Truncate;
+
+            txt.text =
+                "<size=48>Invite Friends</size>\n" +
+                "<size=18><color=#FFFFFF99>Only friends currently playing the game can be invited.</color></size>";
+
+            txt.color = Color.white;
 
             return textGO;
         }
+
 
          public static GameObject CreateButtonFromParent(GameObject parent, CSteamID steamID, string name)
          {

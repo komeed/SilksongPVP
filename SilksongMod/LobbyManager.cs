@@ -11,6 +11,12 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = System.Object;
 
+/*
+ * TODO List:
+ * - Display invite button in escape menu
+ * - add hit animation and other effects to synced hornets by mimicking enemy 
+ */
+
 namespace SilksongMod 
 {
     public class LobbyManager : MonoBehaviour
