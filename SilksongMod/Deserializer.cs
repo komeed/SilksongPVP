@@ -50,6 +50,20 @@ namespace SilksongMod
 
         public static void RecieveAttackData(byte[] data, CSteamID sender)
         {
+            if (data.Length == 1 && data[0] == (byte)LobbyCommand.Ping) // if recieved hit confirmation
+            {
+                if (LobbyManager.LobbyPlayers.TryGetValue(sender, out var hornet))
+                {
+                    SilksongModPlugin.Log.LogInfo("Received hit confirmation! showing animation");
+                    hornet.ShowHitAnim();
+                }
+                else
+                {
+                    SilksongModPlugin.Log.LogError("Piing in recieveattackdata sender not there OOPS");
+                }
+
+                return;
+            }
             byte masks = data[0];
             byte direction = data[1];
             CollisionSide x = CollisionSide.left;
@@ -57,7 +71,18 @@ namespace SilksongMod
             {
                 x = CollisionSide.right;
             }
+
+            LobbyManager.HitEnemy = false;
+            if (LobbyManager.HeroController.cState.Invulnerable)
+            {
+                LobbyManager.HeroController.cState.invulnerable = false; // no cooldown (hopefully this works!)
+            }
             LobbyManager.HeroController.TakeDamage(null, x, masks, HazardType.ENEMY);
+            if (LobbyManager.HitEnemy) // if the hit registers and player loses health, send hit confirmation
+            {
+                SteamP2PSender.SendData(sender, new byte[1] { (byte)LobbyCommand.Ping }, P2PChannel.Attack);
+                LobbyManager.HitEnemy = false;
+            }
         }
 
         public static void RecievePosData(byte[] data, CSteamID sender)

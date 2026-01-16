@@ -6,7 +6,7 @@ using Steamworks;
 
 namespace SilksongMod
 {
-    public class LobbyDisplay
+    public static class LobbyDisplay
     {
         private static GameObject lobbyPanel;
         private static List<Text> notificationTexts = new List<Text>();

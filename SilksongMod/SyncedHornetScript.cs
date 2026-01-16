@@ -21,6 +21,7 @@ namespace SilksongMod
         private BoxCollider2D _collider;
 
         private GameObject[] NailAttacks;
+        private SpriteFlash _flash;
 
         private void Awake()
         {
@@ -49,6 +50,8 @@ namespace SilksongMod
             CopyBoxCollider2D(_collider, transform.gameObject);
             SilksongModPlugin.Log.LogInfo("Finished setting up Hornet.");
             gameObject.layer = (int)PhysLayers.GRASS;
+            
+            _flash = gameObject.AddComponent<SpriteFlash>();
         }
 
         private void Start()
@@ -68,6 +71,11 @@ namespace SilksongMod
             _rb.linearVelocity = posData.Velocity;
           //  _collider.size = posData.ColliderSize;
           //  _collider.offset = posData.ColliderOffset;
+        }
+
+        public void ShowHitAnim()
+        {
+            _flash.FlashEnemyHit();
         }
         
         private void DrawHornet(tk2dSprite original)
@@ -221,7 +229,7 @@ namespace SilksongMod
             {
                 direction = 0;
             }
-            SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data");
+            SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data"); // mask , direction
             SteamP2PSender.SendData(steamID, new byte[2] {1, direction}, P2PChannel.Attack); // nail damage deals one mask,
             // direction is which side the syncedhornet got hit
         }

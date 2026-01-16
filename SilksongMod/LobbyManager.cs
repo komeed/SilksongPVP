@@ -13,7 +13,6 @@ using Object = System.Object;
 
 /*
  * TODO List:
- * - Display invite button in escape menu
  * - add hit animation and other effects to synced hornets by mimicking enemy 
  */
 
@@ -37,10 +36,11 @@ namespace SilksongMod
         public static Dictionary<NailAttackBase, int> NABListIndex = new Dictionary<NailAttackBase, int>();
         
         public static GameObject HostHornet;
-        public static bool HostHornetActive;
         public static HeroController HeroController;
 
         public static GameObject AttacksBuffer;
+
+        public static bool HitEnemy;
         
        // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
         
@@ -190,7 +190,6 @@ namespace SilksongMod
         
         public static void ActivateHornets(bool active)
         {
-            HostHornetActive = true;
             foreach (SyncedHornetScript hornet in LobbyPlayers.Values)
             {
                 hornet.gameObject.SetActive(active);

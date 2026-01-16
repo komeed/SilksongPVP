@@ -27,13 +27,13 @@ namespace SilksongMod.Patches
             return true;
         }
     }
-    
-    [HarmonyPatch(typeof(DamageEnemies))]
-    [HarmonyPatch("OnCollisionEnter2D", new[] { typeof(Collision2D) })]
+   /* 
+    [HarmonyPatch(typeof(HeroController))]
+    [HarmonyPatch("TakeDamage", new[] { typeof(GameObject), typeof(CollisionSide),  })]
     public class CollisionPatch
     {
         [HarmonyPrefix]
-        public static void Prefix(DamageEnemies __instance, Collision2D collision) 
+        public static void Prefix(HeroController __instance, GameObject go, CollisionSide damageSide, int damageAmount, HazardType hazardType, DamagePropertyFlags damagePropertyFlags = DamagePropertyFlags.None) 
         {
             SilksongModPlugin.Log.LogInfo($"CollisionEnter2D: hit some object! idk what. Curr Object: trigger: {__instance.gameObject.GetComponent<Collider2D>().isTrigger}");
             if (collision.gameObject.TryGetComponent<SyncedHornetScript>(out var script))
@@ -42,5 +42,5 @@ namespace SilksongMod.Patches
                 script.TakeDamage();
             }
         }
-    }
+    }*/
 }

@@ -33,10 +33,11 @@ namespace SilksongMod
                 SendNetworkUpdate();
             }
 
-            if (Input.GetKeyDown(KeyCode.Space))
+          /*  if (Input.GetKeyDown(KeyCode.Space))
             {
-                LobbyManager.HeroController.TakeDamage(null, CollisionSide.left, 2, HazardType.ENEMY);
-            }
+                SpriteFlash flash = GetComponent<SpriteFlash>();
+                flash.FlashEnemyHit();
+            }*/
         }
 
         void FixedUpdate()

@@ -17,7 +17,6 @@ namespace SilksongMod
             LobbyManager.SetHostHornet(__instance.gameObject);
             // retrieve every 
             LobbyManager.StoreNailAttackComponents(__instance.gameObject);
-            LobbyManager.ActivateHornets(true);
         }
         
         public static List<ComponentObjectInfo> FindAllWithTagIncludingInactive(string tag)
