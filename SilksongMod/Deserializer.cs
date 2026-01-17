@@ -80,8 +80,13 @@ namespace SilksongMod
             LobbyManager.HeroController.TakeDamage(null, x, masks, HazardType.ENEMY);
             if (LobbyManager.HitEnemy) // if the hit registers and player loses health, send hit confirmation
             {
+                SilksongModPlugin.Log.LogInfo("hit is registered successfully! sending now.");
                 SteamP2PSender.SendData(sender, new byte[1] { (byte)LobbyCommand.Ping }, P2PChannel.Attack);
                 LobbyManager.HitEnemy = false;
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("I hit you but you didn't recieve the hit, how can this be?");
             }
         }
 

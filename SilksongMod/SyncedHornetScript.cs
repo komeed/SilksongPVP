@@ -22,6 +22,7 @@ namespace SilksongMod
 
         private GameObject[] NailAttacks;
         private SpriteFlash _flash;
+        private MeshRenderer _renderer;
 
         private void Awake()
         {
@@ -49,9 +50,10 @@ namespace SilksongMod
             _collider = gameObject.AddComponent<BoxCollider2D>();
             CopyBoxCollider2D(_collider, transform.gameObject);
             SilksongModPlugin.Log.LogInfo("Finished setting up Hornet.");
-            gameObject.layer = (int)PhysLayers.GRASS;
+            gameObject.layer = (int)PhysLayers.ENEMIES;
             
             _flash = gameObject.AddComponent<SpriteFlash>();
+            _flash.enabled = true;
         }
 
         private void Start()
@@ -75,13 +77,34 @@ namespace SilksongMod
 
         public void ShowHitAnim()
         {
+            if (!_flash.enabled)
+            {
+                SilksongModPlugin.Log.LogInfo("THE FLASH COMPONENT ISN'T EVEN ENABLED WTF");
+                _flash.enabled = true;
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("Flash is enabled....");
+            }
+
+            if (!_renderer.enabled)
+            {
+                SilksongModPlugin.Log.LogInfo("The Renderer component isn't even enabled wtf!!!");
+                _renderer.enabled = true;
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("Rednerered is enabled....");
+            }
             _flash.FlashEnemyHit();
         }
         
         private void DrawHornet(tk2dSprite original)
         {
             var meshFilter = gameObject.AddComponent<MeshFilter>();
-            var meshRenderer = gameObject.AddComponent<MeshRenderer>();
+            meshFilter.sharedMesh = LobbyManager.HostHornet.GetComponent<MeshFilter>().sharedMesh;
+            _renderer = gameObject.AddComponent<MeshRenderer>();
+            CopyMeshRenderer(LobbyManager.HostHornet.GetComponent<MeshRenderer>(), _renderer);
             var sprite = gameObject.AddComponent<tk2dSprite>();
             sprite.Collection = original.Collection;
             sprite.spriteId = original.spriteId;
@@ -94,6 +117,47 @@ namespace SilksongMod
                 SilksongModPlugin.Log.LogError("CopyAnimatorFields: Sprite is null! HOW IS THIS EVEN POSSIBLE WTF");
             }
         }
+        
+        public static void CopyMeshRenderer(MeshRenderer source, MeshRenderer target)
+        {
+            if (source == null || target == null)
+            {
+                Debug.LogWarning("Source or target is null");
+                return;
+            }
+
+            // Copy enabled state
+            target.enabled = true;
+
+            // Copy shadow settings
+            target.shadowCastingMode = source.shadowCastingMode;
+            target.receiveShadows = source.receiveShadows;
+
+            // Copy materials safely (unique instances)
+            Material[] sourceMats = source.sharedMaterials;       // get the original materials
+            Material[] newMats = new Material[sourceMats.Length]; // new array for target
+
+            for (int i = 0; i < sourceMats.Length; i++)
+            {
+                newMats[i] = Instantiate(sourceMats[i]); // clone each material
+            }
+
+            target.materials = newMats; // assign cloned materials to target
+
+            // Copy light probe & reflection settings
+            target.lightProbeUsage = source.lightProbeUsage;
+            target.reflectionProbeUsage = source.reflectionProbeUsage;
+            target.probeAnchor = source.probeAnchor;
+
+            // Copy sorting layer / order (for UI / Sprite Renderer similar)
+            target.sortingLayerID = source.sortingLayerID;
+            target.sortingOrder = source.sortingOrder;
+
+            // Copy motion vector / rendering layer options (optional)
+            target.allowOcclusionWhenDynamic = source.allowOcclusionWhenDynamic;
+            target.motionVectorGenerationMode = source.motionVectorGenerationMode;
+        }
+
         
         private void CopyAnimatorFields()
         {

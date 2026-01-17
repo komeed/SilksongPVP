@@ -32,12 +32,7 @@ namespace SilksongMod
                 _timer -= SendInterval; // preserves timing accuracy
                 SendNetworkUpdate();
             }
-
-          /*  if (Input.GetKeyDown(KeyCode.Space))
-            {
-                SpriteFlash flash = GetComponent<SpriteFlash>();
-                flash.FlashEnemyHit();
-            }*/
+            
         }
 
         void FixedUpdate()

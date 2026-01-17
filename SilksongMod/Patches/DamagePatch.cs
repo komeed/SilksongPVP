@@ -21,7 +21,7 @@ namespace SilksongMod.Patches
             {
                 SilksongModPlugin.Log.LogInfo("hit synced hornet! sending hit");
                 script.TakeDamage();
-                return false;
+                //return false;
             }
 
             return true;

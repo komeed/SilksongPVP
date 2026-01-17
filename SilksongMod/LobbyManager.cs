@@ -12,8 +12,7 @@ using UnityEngine.UI;
 using Object = System.Object;
 
 /*
- * TODO List:
- * - add hit animation and other effects to synced hornets by mimicking enemy 
+
  */
 
 namespace SilksongMod 
@@ -73,6 +72,10 @@ namespace SilksongMod
         {
             foreach (SyncedHornetScript script in LobbyPlayers.Values)
             {
+                if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    script.ShowHitAnim();
+                }
                 if (CurrScene != "MAINMENU" && script.scene == CurrScene)
                 {
                     script.gameObject.SetActive(true);

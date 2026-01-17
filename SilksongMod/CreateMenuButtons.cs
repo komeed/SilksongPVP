@@ -8,15 +8,30 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace SilksongMod
-{ 
-    [HarmonyPatch(typeof(UIManager), "SetMenuState")] 
+{
+    [HarmonyPatch(typeof(UIManager), "SetMenuState")]
     public static class CreateMenuButtons
     {
         private static GameObject hostButton;
+        public static GameObject ContinueInviteButton;
 
         [HarmonyPrefix]
         static void Prefix(UIManager __instance, MainMenuState newState)
         {
+            if (newState == MainMenuState.PAUSE_MENU)
+            {
+                GameObject continueButton = GameObject.Find("ContinueButton");
+                if (continueButton != null)
+                {
+                    SilksongModPlugin.Log.LogInfo("Found conitnue button!");
+                    ContinueInviteButton = CreateHostButton(continueButton);
+                }
+                else
+                {
+                    SilksongModPlugin.Log.LogInfo("Couldn't find continue button");
+                }
+            }
+
             if (newState != MainMenuState.MAIN_MENU)
             {
                 if (hostButton != null)
@@ -24,6 +39,7 @@ namespace SilksongMod
                     UnityEngine.Object.Destroy(hostButton);
                     hostButton = null;
                 }
+
                 return;
             }
 
@@ -32,37 +48,35 @@ namespace SilksongMod
                 SilksongModPlugin.Log.LogError("TEST BUTTON SHOULD BE NULL");
                 return;
             }
+
             GameObject obj = GameObject.Find("StartGameButton");
-            CreateHostButton(obj);
-            //CreateJoinButton();
- 
+            hostButton = CreateHostButton(obj);
+
             LobbyManager.UpdateCurrSceneAndSend("MAINMENU");
         }
 
         public static GameObject CreateHostButton(GameObject obj)
         {
-            hostButton = UnityEngine.Object.Instantiate(obj, obj.transform.parent);
+            GameObject hostButton = UnityEngine.Object.Instantiate(obj, obj.transform.parent);
             Object.DontDestroyOnLoad(hostButton);
             ((Component)hostButton.transform.GetChild(0)).GetComponent<Text>().text = "Invite To Lobby";
             //destroy previous eventtrigger
             Object.Destroy(hostButton.GetComponent<EventTrigger>());
             EventTrigger trig = hostButton.AddComponent<EventTrigger>();
             trig.triggers = new System.Collections.Generic.List<EventTrigger.Entry>();
-            
+
             var clickEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerClick };
             clickEntry.callback.AddListener(HostButtonPressed);
             trig.triggers.Add(clickEntry);
-            
+
             var submitEntry = new EventTrigger.Entry { eventID = EventTriggerType.Submit };
             submitEntry.callback.AddListener(HostButtonPressed);
             trig.triggers.Add(submitEntry);
             return hostButton;
         }
-        
+
         public static void HostButtonPressed(BaseEventData data)
         {
-           // GlobalHost.HostEnabled = true;
-            //SilksongModPlugin.Log.LogInfo($"HOST ENABLED?? {GlobalHost.HostEnabled}");
             SilksongModPlugin.LobbyManager.DisplayInvite();
         }
     }
@@ -71,44 +85,31 @@ namespace SilksongMod
     public static class CreatePauseInviteButton
     {
         private static GameObject inviteButton;
-        [HarmonyPrefix]
-        public static void Prefix(UIManager __instance, MenuScreen menu)
+        [HarmonyPostfix]
+        public static void Postfix(UIManager __instance, MenuScreen menu)
         {
-            if (menu == __instance.pauseMenuScreen)
-            {
-                SilksongModPlugin.Log.LogInfo($"Opening Pause menu! from menu: {menu.gameObject.name}");
-                if (inviteButton == null)
-                {
-                    SilksongModPlugin.Log.LogInfo("invite button doesn't exist, let me create it!");
-                }
-                else
-                {
-                    SilksongModPlugin.Log.LogInfo("invite button exists, but it's possible that it's wrong. lets see if it's wrong");
-                }
-                GameObject continueButton = menu.gameObject.transform.Find("Container/Controls/ContinueButton").gameObject;
-                if (continueButton != null)
-                {
-                    inviteButton = CreateMenuButtons.CreateHostButton(continueButton);
-                }
-                else
-                {
-                    SilksongModPlugin.Log.LogError("couldn't find continue button. OOPS");
-                }
-            }
-            else
-            {
-                SilksongModPlugin.Log.LogInfo("Showing menu that isn't pausemenu");
-            }
+            Object.Destroy(CreateMenuButtons.ContinueInviteButton); // destroy it first
         }
-        static void PrintChildrenRecursive(Transform parent, int depth)
-        {
-            string indent = new string(' ', depth * 2);
-            SilksongModPlugin.Log.LogInfo($"{indent}{parent.name}");
+    }
 
-            foreach (Transform child in parent)
+    [HarmonyPatch(typeof(PauseMenuButton), "OnSubmit")]
+    public static class PauseMenuButtonPatch
+    {
+        private static GameObject inviteButton;
+
+        [HarmonyPrefix]
+        public static bool Prefix(PauseMenuButton __instance, BaseEventData eventData)
+        {
+            if (__instance.pauseButtonType == PauseMenuButton.PauseButtonType.Continue &&
+                __instance.gameObject.name == "ContinueButton(Clone)")
             {
-                PrintChildrenRecursive(child, depth + 1);
+                __instance.flashEffect.ResetTrigger("Flash");
+                __instance.flashEffect.SetTrigger("Flash");
+                __instance.ForceDeselect();
+                return false;
             }
+
+            return true;
         }
     }
 }
