@@ -28,7 +28,7 @@ namespace SilksongMod.tk2dAnimatorPatch
                         if (LobbyManager.NABListIndex.TryGetValue(component, out int index))
                         {
                             byte[] data = Serializer.SerializeNailPlay(index, clip.name, clipStartTime, overrideFps);
-                            SilksongModPlugin.Log.LogInfo($"Sending Nail Attack to lobby! name: {__instance.gameObject.name}");
+                            //SilksongModPlugin.Log.LogInfo($"Sending Nail Attack to lobby! name: {__instance.gameObject.name}");
                             LobbyManager.SendDataToLobby(data, P2PChannel.Anim);
                         }
                         else
@@ -38,8 +38,8 @@ namespace SilksongMod.tk2dAnimatorPatch
                     }
                     else
                     {
-                        SilksongModPlugin.Log.LogInfo($"Play: this nail attack called name: {__instance.gameObject.name}" +
-                                                      $" doesn't have a NailAttackBase component!");
+                      //  SilksongModPlugin.Log.LogInfo($"Play: this nail attack called name: {__instance.gameObject.name}" +
+                            //                          $" doesn't have a NailAttackBase component!");
                     }
                 }
             }
@@ -70,57 +70,16 @@ namespace SilksongMod.tk2dAnimatorPatch
                         }
                         else
                         {
-                            SilksongModPlugin.Log.LogError($"Stop: NABLIST DOESN'T HAVE component for name: {__instance.gameObject.name}. Something wrong with inheritance here.");
+                          //  SilksongModPlugin.Log.LogError($"Stop: NABLIST DOESN'T HAVE component for name: {__instance.gameObject.name}. Something wrong with inheritance here.");
                         }
                     }
                     else
                     {
-                        SilksongModPlugin.Log.LogInfo($"Stop: this nail attack called name: {__instance.gameObject.name}" +
-                                                      $" doesn't have a NailAttackBase component!");
+                     //   SilksongModPlugin.Log.LogInfo($"Stop: this nail attack called name: {__instance.gameObject.name}" +
+                            //                          $" doesn't have a NailAttackBase component!");
                     }
                 }
             }
-        }
-    }
-    
-    [HarmonyPatch(typeof(tk2dSpriteAnimator), "StopAndResetFrame")]
-    public class AnimatorStopAndResetFramePatch
-    {   
-        [HarmonyPrefix]
-        public static void Prefix(tk2dSpriteAnimator __instance)
-        {
-            // send stop command
-        }
-    }
-
-    [HarmonyPatch(typeof(tk2dSpriteAnimator), "Pause")]
-    public class AnimatorPausePatch
-    {
-        [HarmonyPrefix]
-        public static void Prefix(tk2dSpriteAnimator __instance)
-        {
-            // send pause command
-        }
-    }
-    
-    [HarmonyPatch(typeof(tk2dSpriteAnimator), "Resume")]
-    public class AnimatorResumePatch
-    {
-        [HarmonyPrefix]
-        public static void Prefix(tk2dSpriteAnimator __instance)
-        {
-            // send resume command
-        }
-    }
-    
-    [HarmonyPatch(typeof(tk2dSpriteAnimator))]
-    [HarmonyPatch("SetFrame", new[] { typeof(int), typeof(bool) })]
-    public class AnimatorSetFramePatch
-    {
-        [HarmonyPrefix]
-        public static void Prefix(tk2dSpriteAnimator __instance)
-        {
-            // send set frame with int and bool paremeter
         }
     }
     

@@ -32,7 +32,15 @@ namespace SilksongMod
                 _timer -= SendInterval; // preserves timing accuracy
                 SendNetworkUpdate();
             }
-            
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                LobbyManager.HeroTakeDamage(1, CollisionSide.left, new CSteamID(2), true);
+            }
+            else if (Input.GetKeyDown(KeyCode.Q))
+            {
+                LobbyManager.HeroTakeDamage(1, CollisionSide.left, new CSteamID(2), false);
+            }
         }
 
         void FixedUpdate()

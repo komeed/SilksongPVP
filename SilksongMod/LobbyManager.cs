@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using GlobalEnums;
 using HutongGames.PlayMaker.Actions;
 using InControl;
+using SilksongMod.Enums;
 using SilksongMod.SteamP2P;
 using UnityEngine;
 using Steamworks;
@@ -252,6 +254,7 @@ namespace SilksongMod
             HostHornet = hornet;
             HostHornet.AddComponent<NetworkSender>();
             HeroController = HostHornet.GetComponent<HeroController>();
+            SilksongModPlugin.Log.LogInfo($"InvulTime for herocontroller: {HeroController.INVUL_TIME}");
         }
 
         public static void LeaveRecievedFromPlayer(CSteamID player)
@@ -309,6 +312,30 @@ namespace SilksongMod
             {
                 NABListIndex[NABList[i]] = i;
             }
+        }
+
+        public static void HeroTakeDamage(int damageAmount, CollisionSide side, CSteamID sender, bool shortenInvul)
+        {
+            HitEnemy = false;
+            SilksongModPlugin.Log.LogInfo($"InvulTime for herocontroller: {HeroController.INVUL_TIME}");
+            // HeroController.INVUL_TIME /= 4;
+            HeroController.TakeDamage(null, side, damageAmount, HazardType.ENEMY);
+            if (HitEnemy)
+            {
+                SteamP2PSender.SendData(sender, new byte[1] { (byte)LobbyCommand.Ping }, P2PChannel.Attack);
+            }
+            // do this some other way
+            /*if (HitEnemy) // if the hit registers and player loses health, send hit confirmation
+            {
+                SilksongModPlugin.Log.LogInfo("hit is registered successfully! sending now.");
+                
+                HitEnemy = false;
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("I hit you but you didn't recieve the hit, how can this be?");
+            }*/
+            HitEnemy = false;
         }
         
         #endregion

@@ -293,17 +293,17 @@ namespace SilksongMod
             {
                 direction = 0;
             }
-            SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data"); // mask , direction
+            //SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data"); // mask , direction
             SteamP2PSender.SendData(steamID, new byte[2] {1, direction}, P2PChannel.Attack); // nail damage deals one mask,
             // direction is which side the syncedhornet got hit
         }
 
         public void ActivateNailAttack(int index, bool active)
         {
-            SilksongModPlugin.Log.LogInfo($"ActivateNailAttack called! for gameobject name: {NailAttacks[index].name} {active}");
+           // SilksongModPlugin.Log.LogInfo($"ActivateNailAttack called! for gameobject name: {NailAttacks[index].name} {active}");
             if (index >= 0 && index < NailAttacks.Length)
             {
-                SilksongModPlugin.Log.LogInfo($"Nail Attack tag: {NailAttacks[index].tag}");
+              //  SilksongModPlugin.Log.LogInfo($"Nail Attack tag: {NailAttacks[index].tag}");
                 NailAttacks[index].SetActive(active);
             }
             else

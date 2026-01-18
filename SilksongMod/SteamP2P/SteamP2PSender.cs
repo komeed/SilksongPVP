@@ -26,7 +26,7 @@ namespace SilksongMod.SteamP2P
 
             if (SendData(target, data, P2PChannel.Lobby))
             {
-                SilksongModPlugin.Log.LogInfo($"Successfully sent Lobby for {target} to join!");
+             //   SilksongModPlugin.Log.LogInfo($"Successfully sent Lobby for {target} to join!");
             }
             else
             {

@@ -54,7 +54,7 @@ namespace SilksongMod
             {
                 if (LobbyManager.LobbyPlayers.TryGetValue(sender, out var hornet))
                 {
-                    SilksongModPlugin.Log.LogInfo("Received hit confirmation! showing animation");
+                   // SilksongModPlugin.Log.LogInfo("Received hit confirmation! showing animation");
                     hornet.ShowHitAnim();
                 }
                 else
@@ -71,23 +71,7 @@ namespace SilksongMod
             {
                 x = CollisionSide.right;
             }
-
-            LobbyManager.HitEnemy = false;
-            if (LobbyManager.HeroController.cState.Invulnerable)
-            {
-                LobbyManager.HeroController.cState.invulnerable = false; // no cooldown (hopefully this works!)
-            }
-            LobbyManager.HeroController.TakeDamage(null, x, masks, HazardType.ENEMY);
-            if (LobbyManager.HitEnemy) // if the hit registers and player loses health, send hit confirmation
-            {
-                SilksongModPlugin.Log.LogInfo("hit is registered successfully! sending now.");
-                SteamP2PSender.SendData(sender, new byte[1] { (byte)LobbyCommand.Ping }, P2PChannel.Attack);
-                LobbyManager.HitEnemy = false;
-            }
-            else
-            {
-                SilksongModPlugin.Log.LogInfo("I hit you but you didn't recieve the hit, how can this be?");
-            }
+            LobbyManager.HeroTakeDamage(masks, x, sender, true);
         }
 
         public static void RecievePosData(byte[] data, CSteamID sender)
