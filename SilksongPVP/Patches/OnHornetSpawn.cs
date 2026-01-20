@@ -17,6 +17,14 @@ namespace SilksongMod
             LobbyManager.SetHostHornet(__instance.gameObject);
             // retrieve every 
             LobbyManager.StoreNailAttackComponents(__instance.gameObject);
+            LobbySwitch.SetActive(false);
+            if (LobbyManager.isGlobalLobby)
+            {
+                SilksongModPlugin.Log.LogInfo("Spawned in global lobby!");
+                // first disable the lobby thing so that we don't invite/add/leave anyone
+                LobbyDisplay.SetPanelActive(false);
+                LobbyManager.server.JoinGlobalLobby(LobbyManager.CurrSteamID, LobbyManager.CurrName);
+            }
         }
         
         public static List<ComponentObjectInfo> FindAllWithTagIncludingInactive(string tag)

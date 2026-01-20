@@ -167,5 +167,10 @@ namespace SilksongMod
         {
             return lobbyPanel;
         }
+
+        public static void SetPanelActive(bool active)
+        {
+            lobbyPanel.SetActive(active);
+        }
     }
 }

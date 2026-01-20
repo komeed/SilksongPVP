@@ -18,8 +18,18 @@ namespace SilksongMod
         [HarmonyPrefix]
         static void Prefix(UIManager __instance, MainMenuState newState)
         {
-            if (newState == MainMenuState.PAUSE_MENU)
+            if (newState == MainMenuState.SAVE_PROFILES)
             {
+                LobbySwitch.SetActive(true);
+            }
+            else
+            {
+                LobbySwitch.SetActive(false);
+            }
+            SilksongModPlugin.Log.LogInfo("new menu state: " + newState);
+            if (newState == MainMenuState.PAUSE_MENU && !LobbyManager.isGlobalLobby)
+            {
+                
                 GameObject continueButton = GameObject.Find("ContinueButton");
                 if (continueButton != null)
                 {
@@ -43,6 +53,15 @@ namespace SilksongMod
                 return;
             }
 
+            if (LobbyManager.isGlobalLobby)
+            {
+                //show lobby after leaving
+                LobbyManager.LeaveButtonPressed();
+                LobbyDisplay.SetPanelActive(true);
+                LobbySwitch.SetToggleOff();
+                LobbyManager.isGlobalLobby = false; // just to be sure
+            }
+
             if (hostButton != null)
             {
                 SilksongModPlugin.Log.LogError("TEST BUTTON SHOULD BE NULL");
@@ -59,7 +78,9 @@ namespace SilksongMod
         {
             GameObject hostButton = UnityEngine.Object.Instantiate(obj, obj.transform.parent);
             Object.DontDestroyOnLoad(hostButton);
-            ((Component)hostButton.transform.GetChild(0)).GetComponent<Text>().text = "Invite To Lobby";
+            Text text = ((Component)hostButton.transform.GetChild(0)).GetComponent<Text>();
+            text.text = "Invite To Lobby";
+            LobbyManager.DefaultFont = text.font;
             //destroy previous eventtrigger
             Object.Destroy(hostButton.GetComponent<EventTrigger>());
             EventTrigger trig = hostButton.AddComponent<EventTrigger>();

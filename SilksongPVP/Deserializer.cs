@@ -264,5 +264,38 @@ namespace SilksongMod
             }
         }
 
+        public static Dictionary<ulong, string> DeserializeLobbyPlayerDict(byte[] data)
+        {
+            var dict = new Dictionary<ulong, string>();
+            int offset = 0;
+
+            while (offset < data.Length)
+            {
+                if (offset + 8 > data.Length)
+                    throw new Exception("Unexpected end of data while reading SteamID");
+
+                // Read 8-byte SteamID (little-endian)
+                ulong steamID = BitConverter.ToUInt64(data, offset);
+                offset += 8;
+
+                if (offset >= data.Length)
+                    throw new Exception("Unexpected end of data while reading name length");
+
+                // Read 1-byte name length
+                byte nameLen = data[offset];
+                offset += 1;
+
+                if (offset + nameLen > data.Length)
+                    throw new Exception("Unexpected end of data while reading name");
+
+                // Read name bytes and decode
+                string name = Encoding.UTF8.GetString(data, offset, nameLen);
+                offset += nameLen;
+
+                dict[steamID] = name;
+            }
+
+            return dict;
+        }
     }
 }

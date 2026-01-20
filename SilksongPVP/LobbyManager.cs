@@ -4,6 +4,7 @@ using System.Text;
 using GlobalEnums;
 using HutongGames.PlayMaker.Actions;
 using InControl;
+using InControl.UnityDeviceProfiles;
 using SilksongMod.Enums;
 using SilksongMod.SteamP2P;
 using UnityEngine;
@@ -22,8 +23,8 @@ namespace SilksongMod
     public class LobbyManager : MonoBehaviour
     {
         public static Font DefaultFont = Font.CreateDynamicFontFromOSFont("Arial", 12);
-        
-        private bool _apiRunning;
+
+        public static bool isGlobalLobby;
 
         public static CSteamID CurrSteamID;
         public static string CurrName;
@@ -43,12 +44,16 @@ namespace SilksongMod
 
         public static bool HitEnemy;
         
+        private static string serverIP = "10.0.0.167";
+
+        public static UDPConnect server;
+        
        // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
         
         #region Event Functions
         public void Awake()
         {
-            _apiRunning = false;
+            isGlobalLobby = false;
             SilksongModPlugin.Log.LogInfo("Starting API");
             
             Canvas canvas = GetComponent<Canvas>(); // check canvas elements
@@ -63,21 +68,26 @@ namespace SilksongMod
             
             JoinDisplay.Init(gameObject, DefaultFont);
             JoinDisplay.SetVisible(false);
+
+            if (server == null)
+            {
+                server = gameObject.AddComponent<UDPConnect>();
+                server.Init(serverIP, 9999, true); // it is the server
+            }
+            
+            LobbySwitch.CreateSwitchWithLabel(canvas);
         }
         
-        public void Start()
+       /* async void Start()
         {
             SilksongModPlugin.Log.LogInfo("START CALLED");
-        }
+            await server.JoinGlobalLobby(CurrSteamID, CurrName);
+        }*/
 
         public void Update()
         {
             foreach (SyncedHornetScript script in LobbyPlayers.Values)
             {
-                if (Input.GetKeyDown(KeyCode.Space))
-                {
-                    script.ShowHitAnim();
-                }
                 if (CurrScene != "MAINMENU" && script.scene == CurrScene)
                 {
                     script.gameObject.SetActive(true);
@@ -85,6 +95,11 @@ namespace SilksongMod
                 else {
                     script.gameObject.SetActive(false);
                 }
+            }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+               server.JoinGlobalLobby(CurrSteamID, CurrName);
             }
         }
         
@@ -147,12 +162,17 @@ namespace SilksongMod
         
         public void DisplayInvite()
         {
-            InviteButtonScript.CreateVerticalLayout(gameObject);
+            InviteButtonScript.CreateFriendLayout(gameObject);
         }
         
         public static void LeaveButtonPressed()
         {
             SilksongModPlugin.Log.LogInfo("Leave button pressed.");
+            if (isGlobalLobby)
+            {
+                // if you are leaving the global lobby, make sure to send the server that you are leaving as well
+                server.LeaveGlobalLobby(CurrSteamID, CurrName);
+            }
             //first send to all people in lobby
             SendLeaveToLobby();
             ResetLobby();
@@ -273,10 +293,16 @@ namespace SilksongMod
         }
         
         #region Helper Methods
+
+        private static void UpdateLobbyUI()
+        {
+            if (!isGlobalLobby)
+            {
+                LobbyDisplay.UpdatePlayerList(LobbyPlayers);
+            }
+        }
         
-        private static void UpdateLobbyUI() { LobbyDisplay.UpdatePlayerList(LobbyPlayers); }
-        
-        private static SyncedHornetScript CreateHornet(CSteamID steamID, string name, string scene)
+        public static SyncedHornetScript CreateHornet(CSteamID steamID, string name, string scene)
         {
             GameObject syncedHornet = new GameObject("SyncedHornet");
             // VERY IMPORTANT: Add script after setting not active
@@ -338,6 +364,20 @@ namespace SilksongMod
             HitEnemy = false;
         }
         
+        #endregion
+
+        #region UDP
+
+        public static void SendJoinLobby(string lobbyName)
+        {
+            
+        }
+
+        public static void SendHostLobby(string lobbyName)
+        {
+            
+        }
+
         #endregion
     }
 }

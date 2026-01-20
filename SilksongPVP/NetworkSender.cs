@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Net.Mime;
 using GlobalEnums;
 using SilksongMod.SteamP2P;
 using Steamworks;
@@ -17,14 +18,19 @@ namespace SilksongMod
         Vector3 lastPhysicsPos;
         Vector3 lastPhysicsVel;
 
+        private TextMesh _text;
+
         void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
             _collider = GetComponent<BoxCollider2D>();
+            _text = SyncedHornetScript.CreateTextComponent(gameObject, LobbyManager.CurrName);
         }
 
         void Update()
         {
+            _text.font = LobbyManager.DefaultFont;
+           // _text.transform.localScale = Vector3.one;
             _timer += Time.deltaTime;
 
             if (_timer >= SendInterval)
@@ -32,15 +38,15 @@ namespace SilksongMod
                 _timer -= SendInterval; // preserves timing accuracy
                 SendNetworkUpdate();
             }
-
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                LobbyManager.HeroTakeDamage(1, CollisionSide.left, new CSteamID(2), true);
-            }
-            else if (Input.GetKeyDown(KeyCode.Q))
-            {
-                LobbyManager.HeroTakeDamage(1, CollisionSide.left, new CSteamID(2), false);
-            }
+        }
+        void LateUpdate()
+        {
+            Vector3 parentScale = _text.transform.parent.lossyScale;
+            _text.transform.localScale = new Vector3(
+                1f / parentScale.x,
+                1f / parentScale.y,
+                1f / parentScale.z
+            );
         }
 
         void FixedUpdate()

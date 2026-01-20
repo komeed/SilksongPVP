@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using SilksongMod.Enums;
+using SilksongMod.SteamP2P;
 using Steamworks;
 using UnityEngine;
 
@@ -155,6 +156,48 @@ namespace SilksongMod
                 // Return the byte array
                 return ms.ToArray();
             }
+        }
+        
+        public static byte[] SteamIDNameToBytes(UDPCommand command, ulong steamID, string name)
+        {
+            // Convert command to a single bytea
+            byte commandByte = (byte)command;
+
+            // Convert SteamID to 8 bytes (little-endian)
+            byte[] steamIDBytes = BitConverter.GetBytes(steamID);
+            if (!BitConverter.IsLittleEndian)
+            {
+                Array.Reverse(steamIDBytes);
+            }
+
+            // Convert name to UTF-8 bytes
+            byte[] nameBytes = Encoding.UTF8.GetBytes(name);
+
+            // Allocate result array: 1 byte command + 8 bytes SteamID + name bytes
+            byte[] result = new byte[1 + steamIDBytes.Length + nameBytes.Length];
+
+            // Fill array
+            result[0] = commandByte;
+            Buffer.BlockCopy(steamIDBytes, 0, result, 1, steamIDBytes.Length);
+            Buffer.BlockCopy(nameBytes, 0, result, 1 + steamIDBytes.Length, nameBytes.Length);
+
+            return result;
+        }
+
+        public static byte[] SerializeSteamID(UDPCommand command, ulong steamID)
+        {
+            byte[] buffer = new byte[1 + 8]; // 1 byte header + 8 bytes SteamID
+
+            buffer[0] = (byte)command;
+
+            // SteamID -> bytes (little-endian)
+            byte[] steamBytes = BitConverter.GetBytes(steamID);
+            if (!BitConverter.IsLittleEndian)
+                Array.Reverse(steamBytes);
+
+            Buffer.BlockCopy(steamBytes, 0, buffer, 1, 8);
+
+            return buffer;
         }
         
         public static byte[] SerializeScene(string scene)

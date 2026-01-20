@@ -9,7 +9,7 @@
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
         <RootNamespace>SilksongMod</RootNamespace>
-        <AssemblyName>SilksongMod</AssemblyName>
+        <AssemblyName>SilksongPVP</AssemblyName>
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
     </PropertyGroup>
@@ -119,7 +119,6 @@
         <Compile Include="Patches\OnEnterWorld.cs" />
         <Compile Include="Patches\OnHornetSpawn.cs" />
         <Compile Include="Patches\OnNextLevelReadyPatch.cs" />
-        <Compile Include="Patches\OnSceneLoad.cs" />
         <Compile Include="Patches\TakeHealthPatch.cs" />
         <Compile Include="Patches\tk2dAnimatorPatch.cs" />
         <Compile Include="Serializer.cs" />
@@ -129,10 +128,14 @@
         <Compile Include="SyncedHornetScript.cs" />
         <Compile Include="TestMod.cs" />
         <Compile Include="Properties\AssemblyInfo.cs"/>
+        <Compile Include="UDP\UDPConnect.cs" />
+        <Compile Include="UDP\UDPEnums.cs" />
         <Compile Include="UI\ChatDisplay.cs" />
+        <Compile Include="UI\CustomInputField.cs" />
         <Compile Include="UI\InviteButtonScript.cs" />
         <Compile Include="UI\JoinDisplay.cs" />
         <Compile Include="UI\LobbyDisplay.cs" />
+        <Compile Include="UI\LobbySwitch.cs" />
         <Compile Include="UI\UIHelper.cs" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>

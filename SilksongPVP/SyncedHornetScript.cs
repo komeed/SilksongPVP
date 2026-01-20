@@ -4,6 +4,7 @@ using GlobalEnums;
 using SilksongMod.SteamP2P;
 using Steamworks;
 using UnityEngine;
+using UnityEngine.UI;
 using Object = System.Object;
 
 //using UnityEngine.Windows;
@@ -15,6 +16,7 @@ namespace SilksongMod
         public CSteamID steamID;
         public string name; // for later name above hornet implementation
         public string scene;
+        public bool isUDP = false; // default is using steamworks
         
         public tk2dSpriteAnimator animator;
         private Rigidbody2D _rb;
@@ -23,6 +25,9 @@ namespace SilksongMod
         private GameObject[] NailAttacks;
         private SpriteFlash _flash;
         private MeshRenderer _renderer;
+        
+        private TextMesh _text;
+        public static float yOffset = 2f;
 
         private void Awake()
         {
@@ -54,11 +59,61 @@ namespace SilksongMod
             
             _flash = gameObject.AddComponent<SpriteFlash>();
             _flash.enabled = true;
+
+            _text = CreateTextComponent(gameObject, name);
+        }
+
+        public static TextMesh CreateTextComponent(GameObject parent, string name)
+        {
+            GameObject textObj = new GameObject("FloatingText");
+            textObj.transform.SetParent(parent.transform);
+
+            // Position it y units above this GameObject
+            textObj.transform.localPosition = Vector3.up * yOffset;
+            textObj.transform.localScale = Vector3.one;
+            // Optional: make it follow this object
+
+            TextMesh tmp = textObj.AddComponent<TextMesh>();
+            tmp.text = name;
+            tmp.fontSize = 30;
+            tmp.characterSize = 0.2f;
+            //tmp.characterSize = 1;
+            tmp.font = LobbyManager.DefaultFont;
+            tmp.GetComponent<MeshRenderer>().material = LobbyManager.DefaultFont.material;
+            tmp.anchor = TextAnchor.MiddleCenter;
+            tmp.alignment = TextAlignment.Center;
+            
+            if (Camera.main)
+            {
+                tmp.transform.forward = Camera.main.transform.forward;
+            }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("Camera main doesn't exist!");
+            }
+           // textObj.transform.SetParent(null);
+            return tmp;
         }
 
         private void Start()
         {
             SilksongModPlugin.Log.LogInfo("First frame of Synced Hornet.");
+        }
+
+        private void Update()
+        {
+            _text.text = name;
+            _text.font = LobbyManager.DefaultFont;
+        }
+
+        private void LateUpdate()
+        {
+            Vector3 parentScale = _text.transform.parent.lossyScale;
+            _text.transform.localScale = new Vector3(
+                1f / parentScale.x,
+                1f / parentScale.y,
+                1f / parentScale.z
+            );
         }
 
         void OnDestroy()

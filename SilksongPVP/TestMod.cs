@@ -35,13 +35,12 @@ namespace SilksongMod
         private static SteamP2PReceiver reciever;
         
         public static LobbyManager LobbyManager;
-        
         private void Awake()
         {
             canvasFound = false;
             Instance = this;
             // Log that the plugin loaded
-            Logger.LogInfo("SilksongMod loaded!");
+            Logger.LogInfo("SilksongPVP loaded!");
             // Patch all Harmony patches in this assembly
             var harmony = new Harmony("com.yourname.silksongmod");
             harmony.PatchAll();
@@ -73,7 +72,7 @@ namespace SilksongMod
             rt.pivot = new Vector2(0.5f, 0.5f);
 
             // Canvas
-            var canvas = go.AddComponent<Canvas>();
+            canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
             // Scaler
