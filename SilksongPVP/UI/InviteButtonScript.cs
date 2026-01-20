@@ -62,13 +62,13 @@ namespace SilksongMod
                     }
                 }
 
-                UIHelper.CreateText(container, "<size=24>OR: (for nonsteam users)</size>" ,
+             /*   UIHelper.CreateText(container, "<size=24>OR: (for nonsteam users)</size>" ,
                     new Vector2(600, 40),
                     Color.black, Color.white);
                 hostLobbyButton = UIHelper.CreateButtonFromParent(container, "Create Lobby", Color.gray, new Vector2(160, 40));
                 hostLobbyButton.GetComponent<Button>().onClick.AddListener(HostButtonPressed);
                 joinLobbyButton = UIHelper.CreateButtonFromParent(container, "Join Lobby", Color.gray, new Vector2(160, 40));
-                joinLobbyButton.GetComponent<Button>().onClick.AddListener(JoinButtonPressed);
+                joinLobbyButton.GetComponent<Button>().onClick.AddListener(JoinButtonPressed);*/
                 
                // inputField = UIHelper.CreateTextBox(container);
             }
@@ -181,7 +181,6 @@ namespace SilksongMod
                   //  LobbyManager.PendingPlayer.Add(steamID); // first, add player to "pending" (we don't know if he accepts yet)
                 }
             }
-            SilksongModPlugin.Log.LogInfo($"text from textbox: {inputField.Text}");
             RemoveOverlay();
         }
 
