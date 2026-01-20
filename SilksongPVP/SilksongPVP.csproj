@@ -114,6 +114,7 @@
         <Compile Include="NetworkSender.cs" />
         <Compile Include="LobbyManager.cs" />
         <Compile Include="Patches\AttackPatch.cs" />
+        <Compile Include="Patches\CompassPatch.cs" />
         <Compile Include="Patches\CreateMenuButtons.cs" />
         <Compile Include="Patches\DamagePatch.cs" />
         <Compile Include="Patches\OnEnterWorld.cs" />

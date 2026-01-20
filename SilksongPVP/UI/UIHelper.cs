@@ -107,8 +107,48 @@ namespace SilksongMod
             return textGO;
         }
 
+        public static GameObject CreateChatText(GameObject parent, string text, Vector2 size, Font font, Color textColor)
+        {
+            GameObject textGO = new GameObject(
+                "ChatText",
+                typeof(RectTransform),
+                typeof(Text),
+                typeof(LayoutElement)
+            );
+            SilksongModPlugin.Log.LogInfo("called createchattext with text " + text);
+
+            textGO.transform.SetParent(parent.transform, false);
+
+            RectTransform rt = textGO.GetComponent<RectTransform>();
+            rt.sizeDelta = size;
+            LayoutElement le = textGO.GetComponent<LayoutElement>();
+            if (le == null)
+            {
+                SilksongModPlugin.Log.LogError("this is somehow null?");
+                le = textGO.AddComponent<LayoutElement>();
+            }
+
+            le.preferredWidth = size.x;
+            le.preferredHeight = size.y;
+
+            Text txt = textGO.GetComponent<Text>();
+
+            //txt.supportRichText = true;
+            txt.alignment = TextAnchor.MiddleLeft;
+            txt.font = font;
+            txt.horizontalOverflow = HorizontalWrapMode.Wrap;
+            txt.verticalOverflow = VerticalWrapMode.Truncate;
+            txt.supportRichText = true;
+
+            txt.text = text;
+
+            txt.color = textColor;
+
+            return textGO;
+        }
+
         public static CustomInputField CreateTextBox(
-            GameObject parentCanvas,
+            GameObject parentCanvas, Vector2 size,
             int maxLength = 100
         )
         {
@@ -120,7 +160,7 @@ namespace SilksongMod
             le.preferredWidth = 600;
             le.preferredHeight = 40;
             CustomInputField inputField = go.AddComponent<CustomInputField>();
-
+            inputField.MaxLength = maxLength;
             return inputField;
         }
 

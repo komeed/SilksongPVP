@@ -92,7 +92,7 @@ namespace SilksongMod
             }
             else
             {
-                inputField = UIHelper.CreateTextBox(container);
+                inputField = UIHelper.CreateTextBox(container, new Vector2(600, 40));
             }
 
             GameObject doneButton = UIHelper.CreateFriendDoneButton(container);
@@ -115,7 +115,7 @@ namespace SilksongMod
             }
             else
             {
-                inputField = UIHelper.CreateTextBox(container);
+                inputField = UIHelper.CreateTextBox(container, new Vector2(600, 40));
             }
 
             GameObject doneButton = UIHelper.CreateFriendDoneButton(container);

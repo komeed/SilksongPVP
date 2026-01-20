@@ -8,6 +8,7 @@ namespace SilksongMod.Enums
         SceneChange = 4, // player changes scene, sends to everyoen else this command
         LeaveLobby = 5,
         Ping = 6,
-        Pong = 7
+        Pong = 7,
+        Message = 8
     }
 }

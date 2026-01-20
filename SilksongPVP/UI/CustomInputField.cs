@@ -13,6 +13,11 @@ namespace SilksongMod
     public Text DisplayText; // Use UnityEngine.UI.Text
 
     private bool isFocused = false;
+    public int fontSize = 12;
+
+    public bool isChatText = false;
+
+    public GameObject pressToChatText;
 
     void Awake()
     {
@@ -26,12 +31,30 @@ namespace SilksongMod
         {
             GameObject textGO = new GameObject("Text", typeof(RectTransform));
             textGO.transform.SetParent(transform, false);
+            pressToChatText = new GameObject("Text", typeof(RectTransform));
+            pressToChatText.transform.SetParent(textGO.transform, false);
+            
+            RectTransform rttxt = pressToChatText.GetComponent<RectTransform>(); // Match parent size
+            rttxt.anchorMin = new Vector2(0f, 0f); // bottom-left
+            rttxt.anchorMax = new Vector2(1f, 1f); // top-right
+            rttxt.offsetMin = Vector2.zero; // no extra offset
+            rttxt.offsetMax = Vector2.zero;
+            rttxt.pivot = new Vector2(0.5f, 0.5f); // center pivot (optional)
+            
+            Text txt = pressToChatText.AddComponent<Text>();
+            txt.color = Color.gray;
+            txt.font = LobbyManager.DefaultFont ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+            //pressToChatText.resizeTextForBestFit = true;
+            txt.alignment = TextAnchor.MiddleLeft;
+            txt.text = "Press 'Enter' To Chat";
+            //pressToChatText.supportRichText = true;
 
             DisplayText = textGO.AddComponent<Text>();
             DisplayText.color = Color.black;
-            DisplayText.font = LobbyManager.DefaultFont;
+            DisplayText.font = LobbyManager.DefaultFont ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             DisplayText.resizeTextForBestFit = true;
             DisplayText.alignment = TextAnchor.MiddleLeft;
+           // DisplayText.supportRichText = true;
 
             RectTransform rt = textGO.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
@@ -43,20 +66,48 @@ namespace SilksongMod
 
     void Update()
     {
-        // Focus logic: click to focus
-        if (Input.GetMouseButtonDown(0))
+
+        if (isChatText)
         {
-            Vector2 mousePos = Input.mousePosition;
-            RectTransform rt = GetComponent<RectTransform>();
-            if (RectTransformUtility.RectangleContainsScreenPoint(rt, mousePos))
+            if (!isFocused)
             {
-                isFocused = true;
+                foreach (char c in Input.inputString)
+                {
+                    if (c == '\n' || c == '\r') // Enter
+                    {
+                        SilksongModPlugin.Log.LogInfo("enter pressed if chat text!");
+                        isFocused = true;
+                        LobbyManager.FreezeGame();
+                        return;
+                    }
+                }
+            }
+            if (DisplayText.text.Length != 0)
+            {
+                pressToChatText.SetActive(false);
             }
             else
             {
-                isFocused = false;
+                pressToChatText.SetActive(true);
             }
         }
+        else
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                Vector2 mousePos = Input.mousePosition;
+                RectTransform rt = GetComponent<RectTransform>();
+                if (RectTransformUtility.RectangleContainsScreenPoint(rt, mousePos))
+                {
+                    isFocused = true;
+                }
+                else
+                {
+                    isFocused = false;
+                }
+            }
+        }
+        
 
         if (!isFocused)
         {
@@ -74,7 +125,19 @@ namespace SilksongMod
                 }
                 else if (c == '\n' || c == '\r') // Enter
                 {
-                    // Could trigger submit event here
+                    if (isChatText)
+                    {
+                        //chat sent, call send message
+                        LobbyManager.UnfreezeGame();
+                        if (Text.Length > 0)
+                        {
+                            LobbyManager.SendMessage(Text);
+                        }
+
+                        Text = "";
+                        DisplayText.text = "";
+                        isFocused = false;
+                    }
                 }
                 else
                 {

@@ -242,6 +242,40 @@ namespace SilksongMod
         {
             return new byte[1] {(byte)LobbyCommand.LeaveLobby};
         }
+
+        public static byte[] SerializeMessage(string name, string message)
+        {
+            // 1️⃣ Convert strings to UTF-8 bytes
+            byte[] nameBytes = System.Text.Encoding.UTF8.GetBytes(name);
+            byte[] messageBytes = System.Text.Encoding.UTF8.GetBytes(message);
+
+            if (nameBytes.Length > ushort.MaxValue)
+                throw new ArgumentException("Name is too long to serialize.");
+
+            // 2️⃣ Allocate array: 1 byte header + 2 bytes name length + name + message
+            byte[] result = new byte[1 + 2 + nameBytes.Length + messageBytes.Length];
+
+            int offset = 0;
+
+            // 3️⃣ Header
+            result[offset++] = (byte)LobbyCommand.Message;
+
+            // 4️⃣ Name length (2 bytes, big-endian)
+            ushort nameLength = (ushort)nameBytes.Length;
+            result[offset++] = (byte)((nameLength >> 8) & 0xFF);
+            result[offset++] = (byte)(nameLength & 0xFF);
+
+            // 5️⃣ Copy name bytes
+            System.Buffer.BlockCopy(nameBytes, 0, result, offset, nameBytes.Length);
+            offset += nameBytes.Length;
+
+            // 6️⃣ Copy message bytes
+            System.Buffer.BlockCopy(messageBytes, 0, result, offset, messageBytes.Length);
+
+            return result;
+        }
+
+
         //public static byte[] 
     }
 }

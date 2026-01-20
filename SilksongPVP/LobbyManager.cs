@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using GlobalEnums;
+using HarmonyLib;
 using HutongGames.PlayMaker.Actions;
 using InControl;
 using InControl.UnityDeviceProfiles;
@@ -13,10 +14,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = System.Object;
-
-/*
-
- */
 
 namespace SilksongMod 
 {
@@ -47,6 +44,8 @@ namespace SilksongMod
         private static string serverIP = "10.0.0.167";
 
         public static UDPConnect server;
+
+        public static bool foundTraverseMethod = false;
         
        // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
         
@@ -76,6 +75,9 @@ namespace SilksongMod
             }
             
             LobbySwitch.CreateSwitchWithLabel(canvas);
+            ChatDisplay.Init(gameObject, DefaultFont);
+            
+         //   Traverse.Create(__instance).Method("PrivateMethodName")
         }
         
        /* async void Start()
@@ -95,11 +97,6 @@ namespace SilksongMod
                 else {
                     script.gameObject.SetActive(false);
                 }
-            }
-
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-               server.JoinGlobalLobby(CurrSteamID, CurrName);
             }
         }
         
@@ -184,6 +181,7 @@ namespace SilksongMod
         public static void AddPlayerToLobby((CSteamID steamID, string name, string scene) playerData)
         {
             SilksongModPlugin.Log.LogInfo($"Adding player {playerData.steamID}. Haven't recieved scene yet.");
+            ChatDisplay.AddPlayerJoinText(playerData.name);
             // to add a player, you need to add it to the dictionary and update the ui
             SyncedHornetScript script = CreateHornet(playerData.steamID, playerData.name, playerData.scene); // createhornet does appending to dictionary for you
             LobbyPlayers.Add(playerData.steamID, script);
@@ -282,6 +280,7 @@ namespace SilksongMod
             SilksongModPlugin.Log.LogInfo($"Leave recieved from player {player}");
             if (LobbyPlayers.TryGetValue(player, out SyncedHornetScript hornet))
             {
+                ChatDisplay.AddPlayerLeaveText(hornet.name);
                 Destroy(hornet.gameObject); //simply destroy him
                 LobbyPlayers.Remove(player);
                 UpdateLobbyUI();
@@ -379,5 +378,24 @@ namespace SilksongMod
         }
 
         #endregion
+
+        public static void SendMessage(string msg)
+        {
+            ChatDisplay.AddPlayerText(CurrName, msg);
+            SilksongModPlugin.Log.LogInfo("sent message!");
+            byte[] data = Serializer.SerializeMessage(CurrName, msg);
+            SendDataToLobby(data, P2PChannel.Lobby);
+        }
+
+        public static void FreezeGame()
+        {
+            SilksongModPlugin.Log.LogInfo("freezing game!");
+            Time.timeScale = 0f;
+        }
+
+        public static void UnfreezeGame()
+        {
+            Time.timeScale = 1f;
+        }
     }
 }

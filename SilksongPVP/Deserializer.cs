@@ -200,6 +200,12 @@ namespace SilksongMod
             {
                 LobbyManager.LeaveRecievedFromPlayer(sender);
             }
+            else if (lobbyCommand == LobbyCommand.Message)
+            {
+                (string name, string msg) = DeserializeMessage(data);
+                ChatDisplay.AddPlayerText(name, msg);
+                SilksongModPlugin.Log.LogInfo("received message!");
+            }
         }
 
         //currently only holding steam id and name
@@ -297,5 +303,36 @@ namespace SilksongMod
 
             return dict;
         }
+        
+        public static (string name, string message) DeserializeMessage(byte[] data)
+        {
+            if (data == null || data.Length < 3)
+                throw new ArgumentException("Data is null or too short.");
+
+            int offset = 0;
+
+            // 1️⃣ Skip header
+            offset++;
+
+            // 2️⃣ Read name length (2 bytes, big-endian)
+            if (data.Length < offset + 2)
+                throw new ArgumentException("Data too short to contain name length.");
+
+            ushort nameLength = (ushort)((data[offset] << 8) | data[offset + 1]);
+            offset += 2;
+
+            if (data.Length < offset + nameLength)
+                throw new ArgumentException("Data too short for name.");
+
+            // 3️⃣ Read name string
+            string name = System.Text.Encoding.UTF8.GetString(data, offset, nameLength);
+            offset += nameLength;
+
+            // 4️⃣ Read message string (rest of data)
+            string message = System.Text.Encoding.UTF8.GetString(data, offset, data.Length - offset);
+
+            return (name, message);
+        }
+
     }
 }
