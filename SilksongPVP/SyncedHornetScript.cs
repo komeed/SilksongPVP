@@ -329,7 +329,7 @@ namespace SilksongMod
             LobbyManager.AttacksBuffer = Attacks;
         }
 
-        private void RemoveAllButGraphics(GameObject go)
+        public static void RemoveAllButGraphics(GameObject go)
         {
             var components = go.GetComponents<Component>();
 

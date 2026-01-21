@@ -49,8 +49,15 @@ namespace SilksongMod
 
         public static GameMap gameMap;
         public static InventoryWideMap inventoryWideMap;
-        private static PrivateCaller caller;
+        public static PrivateCaller caller;
         public static GameObject CompassIcon;
+        public static GameObject tempCompassIcon;
+
+        //public static bool showTempCompass = false;
+        public static bool showingFullMap = false;
+        public static bool showingQuickMap = false;
+        private static readonly AccessTools.FieldRef<GameMap, Vector2> sceneSizeRef =
+            AccessTools.FieldRefAccess<GameMap, Vector2>("currentSceneSize");
 
         // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
 
@@ -84,7 +91,7 @@ namespace SilksongMod
             ChatDisplay.Init(gameObject, DefaultFont);
 
             //   Traverse.Create(__instance).Method("PrivateMethodName")
-           // caller = new PrivateCaller();
+            caller = new PrivateCaller();
         }
 
         /* async void Start()
@@ -105,51 +112,68 @@ namespace SilksongMod
                 else
                 {
                     script.gameObject.SetActive(false);
-                    /* if (script.compassIcon == null)
-                     {
-                         SilksongModPlugin.Log.LogInfo("Compass Icon is null! how?");
-                         continue;
-                     }
-                     if (!gameMap)
-                     {
-                         SilksongModPlugin.Log.LogInfo("null gamemap!");
-                     }
-
-                     if (!inventoryWideMap)
-                     {
-                         SilksongModPlugin.Log.LogInfo("null inventorywidemap!");
-                     }
-
-                     if (gameMap && inventoryWideMap && script.compassIcon.activeInHierarchy)
-                     {
-                         SilksongModPlugin.Log.LogInfo("IT'S ACTIVE RIGHT NOW!! COMPASS!!");
-                         MapZone zone = caller.CallGetMapZone(gameMap, script.scene);
-                         Vector2 pos = GetMapLocationForScene(script.scene, zone);
-                         caller.CallPositionIcon(inventoryWideMap, script.compassIcon.transform, pos, true, zone);
-                     }*/
+                    //since not in same scene, simply use scene pos for both quickmap and fullmap
+                    if (showingQuickMap)
+                    {
+                        script.compassIcon.SetActive(true);
+                        MapZone zone = caller.CallGetMapZone(gameMap, script.scene);
+                        caller.CallGetSceneInfo(gameMap, CurrScene, zone, out GameMapScene mapScene, out var sceneObj,
+                            out var scenePos);
+                        script.compassIcon.transform.SetLocalPosition2D(new Vector3(scenePos.x, scenePos.y, -1f));
+                    }
+                    else if (showingFullMap)
+                    {
+                        
+                    }
                 }
             }
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 SilksongModPlugin.Log.LogInfo("Space pressed");
-                /*foreach (SyncedHornetScript script in LobbyPlayers.Values)
+                InventoryWideMap[] maps = UnityEngine.Object.FindObjectsByType<InventoryWideMap>(
+                    FindObjectsInactive.Include,        // include inactive objects
+                    FindObjectsSortMode.None            // order doesn’t matter
+                );
+                foreach (InventoryWideMap map in maps)
                 {
-                    if (script.compassIcon == null)
-                    {
-                        SilksongModPlugin.Log.LogInfo("Compass Icon is null! HOW PLS HELP ME");
-                        continue;
-                    }
-                    if (script.compassIcon.activeInHierarchy)
-                    {
-                        SilksongModPlugin.Log.LogInfo("IT'S ACTIVE RIGHT NOW!!! WWWWW compass good ");
-                    }
-                    else
-                    {
-                        SilksongModPlugin.Log.LogInfo("inactive compass");
-                    }
-                }*/
+                    SilksongModPlugin.Log.LogInfo($"map name: {map.gameObject.name}");
+                    DamagePatch.PrintComponents(map.transform);
+                }
+                
             }
+           if (CompassIcon != null) // only works if user has compass (so compass icon can show)
+           {
+               GameManager instance = GameManager.instance;
+               if (showingQuickMap)
+               {
+                   tempCompassIcon.SetActive(true);
+                   Vector3 tempPos = HeroController.instance.transform.position - new Vector3(5, 0, 0);
+                   MapZone zone = caller.CallGetMapZone(gameMap, CurrScene);
+                   caller.CallGetSceneInfo(gameMap, CurrScene, zone, out GameMapScene mapScene, out var sceneObj, out var scenePos);
+                   
+                   //Vector2 otherCompassPos = instance.gameMap.GetCompassPositionLocalBounds(out var zoneForBounds);
+                   Vector2 sceneSize = sceneSizeRef(gameMap);
+                   Vector2 mapPos = caller.CallGetMapPosition(gameMap, tempPos, mapScene, sceneObj, scenePos, sceneSize);
+                   tempCompassIcon.transform.SetLocalPosition2D(new Vector3(mapPos.x, mapPos.y, -1f));
+               }
+               else if (showingFullMap && (bool)inventoryWideMap)
+               {
+                  tempCompassIcon.SetActive(true);
+                  Vector3 tempPos = HeroController.instance.transform.position - new Vector3(5, 0, 0);
+                  MapZone zone = caller.CallGetMapZone(gameMap, CurrScene);
+                  caller.CallGetSceneInfo(gameMap, CurrScene, zone, out GameMapScene mapScene, out var sceneObj, out var scenePos);
+                   
+                  //Vector2 otherCompassPos = instance.gameMap.GetCompassPositionLocalBounds(out var zoneForBounds);
+                  Vector2 sceneSize = sceneSizeRef(gameMap);
+                  Vector2 mapPos = caller.CallGetMapPosition(gameMap, tempPos, mapScene, sceneObj, scenePos, sceneSize);
+                  tempCompassIcon.transform.SetLocalPosition2D(new Vector3(mapPos.x, mapPos.y, -1f));
+               }
+               else
+               {
+                   tempCompassIcon.SetActive(false);
+               }
+           }
         }
 
         private void OnDestroy()
@@ -496,6 +520,10 @@ namespace SilksongMod
                     script.compassIcon.SetActive(true);
                 }
             }
+            
+            tempCompassIcon = Instantiate(compassIcon, compassIcon.transform.parent);
+            SyncedHornetScript.RemoveAllButGraphics(tempCompassIcon); // incase playmakerfsm and eventregisters make diff
+            tempCompassIcon.SetActive(true);
         }
 
         private static Vector2 GetMapLocationForScene(string scene, MapZone zone)

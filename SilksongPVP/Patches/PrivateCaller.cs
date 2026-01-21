@@ -10,7 +10,7 @@ namespace SilksongMod.Patches
     public class PrivateCaller
     {
         private delegate void GetSceneInfoDelegate(
-            object instance, 
+            GameMap instance, 
             string sceneName,
             MapZone mapZone,
             out GameMapScene foundScene,
@@ -18,9 +18,9 @@ namespace SilksongMod.Patches
             out Vector2 foundScenePos
         );
         
-        private delegate MapZone GetMapZoneFromSceneNameDelegate(object instance, string sceneName);
-        private delegate Vector2 GetMapPositionDelegate(object instance, Vector2 positionInScene, GameMapScene scene, GameObject sceneObj, Vector2 scenePos, Vector2 sceneSize);
-        private delegate void PositionIconDelegate(object instance, Transform icon, Vector2 mapBoundsPos, bool isActive, MapZone currentMapZone);
+        private delegate MapZone GetMapZoneFromSceneNameDelegate(GameMap instance, string sceneName);
+        private delegate Vector2 GetMapPositionDelegate(GameMap instance, Vector2 positionInScene, GameMapScene scene, GameObject sceneObj, Vector2 scenePos, Vector2 sceneSize);
+        private delegate void PositionIconDelegate(InventoryWideMap instance, Transform icon, Vector2 mapBoundsPos, bool isActive, MapZone currentMapZone);
 
         private GetSceneInfoDelegate cachedDelegate;
         private GetMapZoneFromSceneNameDelegate getMapZoneDelegate;
@@ -29,37 +29,60 @@ namespace SilksongMod.Patches
 
         public PrivateCaller()
         {
-            // Grab the MethodInfo
-            MethodInfo mi = AccessTools.Method(typeof(GameMap), "GetSceneInfo");
+            try
+            {
+                cachedDelegate = CreateDelegate<GetSceneInfoDelegate>(
+                    typeof(GameMap),
+                    "GetSceneInfo"
+                );
 
-            // Create an open instance delegate
-            cachedDelegate = (GetSceneInfoDelegate)Delegate.CreateDelegate(
-                typeof(GetSceneInfoDelegate), 
-                null, // null because open instance delegate
-                mi
-            );
-            
-            // New GetMapZoneFromSceneName delegate setup
-            MethodInfo mi2 = AccessTools.Method(typeof(GameMap), "GetMapZoneFromSceneName");
-            getMapZoneDelegate = (GetMapZoneFromSceneNameDelegate)Delegate.CreateDelegate(
-                typeof(GetMapZoneFromSceneNameDelegate),
-                null,
-                mi2
-            );
-            
-            MethodInfo mi3 = AccessTools.Method(typeof(GameMap), "GetMapPosition");
-            getMapPosDelegate = (GetMapPositionDelegate)Delegate.CreateDelegate(
-                typeof(GetMapPositionDelegate),
-                null,
-                mi3
-            );
-            
-            MethodInfo mi4 = AccessTools.Method(typeof(InventoryWideMap), "PositionIcon");
-            posIconDelegate = (PositionIconDelegate)Delegate.CreateDelegate(
-                typeof(PositionIconDelegate),
-                null,
-                mi4
-            );
+                getMapZoneDelegate = CreateDelegate<GetMapZoneFromSceneNameDelegate>(
+                    typeof(GameMap),
+                    "GetMapZoneFromSceneName"
+                );
+
+                getMapPosDelegate = CreateDelegate<GetMapPositionDelegate>(
+                    typeof(GameMap),
+                    "GetMapPosition"
+                );
+
+                posIconDelegate = CreateDelegate<PositionIconDelegate>(
+                    typeof(InventoryWideMap),
+                    "PositionIcon"
+                );
+            }
+            catch (Exception e)
+            {
+                SilksongModPlugin.Log.LogInfo(
+                    $"[PrivateCaller] Failed to initialize private method delegates:\n{e}"
+                );
+                throw; // fail hard after logging
+            }
+        }
+        
+        private static T CreateDelegate<T>(Type type, string methodName) where T : Delegate
+        {
+            MethodInfo mi = AccessTools.Method(type, methodName);
+
+            if (mi == null)
+            {
+                throw new MissingMethodException(
+                    $"{type.FullName}.{methodName} was not found (private method missing or renamed)"
+                );
+            }
+
+            try
+            {
+                return (T)Delegate.CreateDelegate(typeof(T), null, mi);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidOperationException(
+                    $"Failed to bind delegate for {type.FullName}.{methodName}. " +
+                    $"Signature mismatch or method changed.",
+                    e
+                );
+            }
         }
 
         public void CallGetSceneInfo(GameMap instance, string sceneName, MapZone mapZone,

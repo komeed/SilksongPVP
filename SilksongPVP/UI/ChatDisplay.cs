@@ -20,7 +20,7 @@ namespace SilksongMod
         public static CustomInputField textBox;
 
         private static Vector2 ChatSize = new Vector2(300, 400);
-        private static int chatBoxHeight = 30;
+        private static int chatBoxHeight = 20;
         private static int chatHeight = 20;
 
         public static void Init(GameObject parent, Font font)
@@ -97,6 +97,17 @@ namespace SilksongMod
             layout.childForceExpandWidth = true;
             layout.childForceExpandHeight = false;
 
+            return container;
+        }
+
+        private static GameObject CreateLobbyInfoContainer(GameObject parent)
+        {
+            GameObject container = new GameObject(
+                "LobbyInfoContainer",
+                typeof(RectTransform),
+                typeof(HorizontalLayoutGroup)
+            );
+            container.transform.SetParent(parent.transform, false);
             return container;
         }
 

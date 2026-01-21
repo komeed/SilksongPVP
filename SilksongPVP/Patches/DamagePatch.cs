@@ -63,7 +63,7 @@ namespace SilksongMod.Patches
     }
 
     // Print all components on a single GameObject
-    private static void PrintComponents(Transform t)
+    public static void PrintComponents(Transform t)
     {
         Component[] components = t.GetComponents<Component>();
         string path = GetFullPath(t);
