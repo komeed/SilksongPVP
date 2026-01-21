@@ -19,8 +19,8 @@ namespace SilksongMod
 
         public static CustomInputField textBox;
 
-        private static Vector2 ChatSize = new Vector2(400, 600);
-        private static int chatBoxHeight = 40;
+        private static Vector2 ChatSize = new Vector2(300, 400);
+        private static int chatBoxHeight = 30;
         private static int chatHeight = 20;
 
         public static void Init(GameObject parent, Font font)
@@ -41,8 +41,7 @@ namespace SilksongMod
         {
             GameObject container = new GameObject(
                 "ChatContainer",
-                typeof(RectTransform),
-                typeof(Image)
+                typeof(RectTransform)
             );
             container.transform.SetParent(parent.transform, false);
 
@@ -53,8 +52,8 @@ namespace SilksongMod
             rt.sizeDelta = ChatSize;
             rt.anchoredPosition = Vector2.zero;
 
-            Image img = container.GetComponent<Image>();
-            img.color = new Color(0f, 0f, 0f, 0.75f);
+            //Image img = container.GetComponent<Image>();
+            //img.color = new Color(0f, 0f, 0f, 0.75f);
 
             return container;
         }

@@ -9,7 +9,7 @@ namespace SilksongMod
 {
     public class NetworkSender : MonoBehaviour
     {
-        private const float SendInterval = 1f / 30f; // 20 Hz
+        private const float SendInterval = 1f / 20f; // 20 Hz
         private float _timer;
 
         private Rigidbody2D _rb;
@@ -25,6 +25,7 @@ namespace SilksongMod
             _rb = GetComponent<Rigidbody2D>();
             _collider = GetComponent<BoxCollider2D>();
             _text = SyncedHornetScript.CreateTextComponent(gameObject, LobbyManager.CurrName);
+            _text.color = Color.yellow;
         }
 
         void Update()

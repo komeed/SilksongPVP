@@ -74,4 +74,5 @@
   &lt;Assembly Path="/Users/omeed/Library/Application Support/Steam/steamapps/common/Hollow Knight Silksong/Hollow Knight Silksong.app/Contents/Resources/Data/Managed/UnityEngine.UI.dll" /&gt;
   &lt;Assembly Path="/Users/omeed/Library/Application Support/Steam/steamapps/common/Hollow Knight Silksong/Hollow Knight Silksong.app/Contents/Resources/Data/Managed/UnityEngine.CoreModule.dll" /&gt;
   &lt;Assembly Path="/Users/omeed/RiderProjects/SilksongMod/SilksongPVP/obj/Debug/SilksongPVP.dll" /&gt;
+  &lt;Assembly Path="/Library/Frameworks/Mono.framework/Versions/6.12.0/lib/mono/4.7.2-api/System.dll" /&gt;
 &lt;/AssemblyExplorer&gt;</s:String></wpf:ResourceDictionary>

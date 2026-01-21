@@ -120,6 +120,7 @@
         <Compile Include="Patches\OnEnterWorld.cs" />
         <Compile Include="Patches\OnHornetSpawn.cs" />
         <Compile Include="Patches\OnNextLevelReadyPatch.cs" />
+        <Compile Include="Patches\PrivateCaller.cs" />
         <Compile Include="Patches\TakeHealthPatch.cs" />
         <Compile Include="Patches\tk2dAnimatorPatch.cs" />
         <Compile Include="Serializer.cs" />
@@ -138,6 +139,9 @@
         <Compile Include="UI\LobbyDisplay.cs" />
         <Compile Include="UI\LobbySwitch.cs" />
         <Compile Include="UI\UIHelper.cs" />
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="Allowed Versions.txt" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets"/>
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -24,15 +24,15 @@ namespace SilksongMod
 
             RectTransform textRT = textGO.AddComponent<RectTransform>();
             Text label = textGO.AddComponent<Text>();
-            label.text = "Enable Global Multiplayer Lobby?";
+            label.text = "Enable Global PVP Lobby?";
             label.font = LobbyManager.DefaultFont ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             label.fontSize = 20;
             label.color = Color.white;
             label.alignment = TextAnchor.MiddleLeft;
 
-            textRT.pivot = new Vector2(0, 0);
-            textRT.anchorMin = new Vector2(0, 0);
-            textRT.anchorMax = new Vector2(0, 0);
+            textRT.pivot = new Vector2(0.5f, 0);
+            textRT.anchorMin = new Vector2(0.5f, 0);
+            textRT.anchorMax = new Vector2(0.5f, 0);
             textRT.anchoredPosition = new Vector2(offsetX, offsetY);
             textRT.sizeDelta = new Vector2(240, 40);
 
@@ -43,9 +43,9 @@ namespace SilksongMod
 
             RectTransform toggleRT = toggleGO.AddComponent<RectTransform>();
             toggleRT.sizeDelta = new Vector2(100, 40);
-            toggleRT.pivot = new Vector2(0, 0);
-            toggleRT.anchorMin = new Vector2(0, 0);
-            toggleRT.anchorMax = new Vector2(0, 0);
+            toggleRT.pivot = new Vector2(0.5f, 0);
+            toggleRT.anchorMin = new Vector2(0.5f, 0);
+            toggleRT.anchorMax = new Vector2(0.5f, 0);
             toggleRT.anchoredPosition = new Vector2(offsetX + textRT.sizeDelta.x + 10, offsetY);
 
             Toggle toggle = toggleGO.AddComponent<Toggle>();

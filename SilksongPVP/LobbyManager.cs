@@ -7,6 +7,7 @@ using HutongGames.PlayMaker.Actions;
 using InControl;
 using InControl.UnityDeviceProfiles;
 using SilksongMod.Enums;
+using SilksongMod.Patches;
 using SilksongMod.SteamP2P;
 using UnityEngine;
 using Steamworks;
@@ -15,7 +16,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Object = System.Object;
 
-namespace SilksongMod 
+namespace SilksongMod
 {
     public class LobbyManager : MonoBehaviour
     {
@@ -26,45 +27,50 @@ namespace SilksongMod
         public static CSteamID CurrSteamID;
         public static string CurrName;
         public static string CurrScene;
-        
+
         //DOESN'T INCLUDE YOURSELF; HUGE OPTIMIZATION!
-        public static Dictionary<CSteamID, SyncedHornetScript> LobbyPlayers = new Dictionary<CSteamID, SyncedHornetScript>();
-        
+        public static Dictionary<CSteamID, SyncedHornetScript> LobbyPlayers =
+            new Dictionary<CSteamID, SyncedHornetScript>();
+
         public static Dictionary<CSteamID, string> PendingLobbyBuffer = new Dictionary<CSteamID, string>();
 
         public static Dictionary<NailAttackBase, int> NABListIndex = new Dictionary<NailAttackBase, int>();
-        
+
         public static GameObject HostHornet;
         public static HeroController HeroController;
 
         public static GameObject AttacksBuffer;
 
         public static bool HitEnemy;
-        
+
         private static string serverIP = "10.0.0.167";
 
         public static UDPConnect server;
 
-        public static bool foundTraverseMethod = false;
-        
-       // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
-        
+        public static GameMap gameMap;
+        public static InventoryWideMap inventoryWideMap;
+        private static PrivateCaller caller;
+        public static GameObject CompassIcon;
+
+        // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
+
         #region Event Functions
+
         public void Awake()
         {
             isGlobalLobby = false;
             SilksongModPlugin.Log.LogInfo("Starting API");
-            
+
             Canvas canvas = GetComponent<Canvas>(); // check canvas elements
             if (canvas.GetComponent<GraphicRaycaster>() == null)
             {
                 SilksongModPlugin.Log.LogInfo("CANVAS DIDN'T HAVE GRAPHIC RAYCASTER; Creating raycaster");
                 canvas.gameObject.AddComponent<GraphicRaycaster>();
             }
-            
+
             LobbyDisplay.Init(gameObject, DefaultFont);
             ResetLobby();
-            
+
             JoinDisplay.Init(gameObject, DefaultFont);
             JoinDisplay.SetVisible(false);
 
@@ -73,18 +79,19 @@ namespace SilksongMod
                 server = gameObject.AddComponent<UDPConnect>();
                 server.Init(serverIP, 9999, true); // it is the server
             }
-            
+
             LobbySwitch.CreateSwitchWithLabel(canvas);
             ChatDisplay.Init(gameObject, DefaultFont);
-            
-         //   Traverse.Create(__instance).Method("PrivateMethodName")
+
+            //   Traverse.Create(__instance).Method("PrivateMethodName")
+           // caller = new PrivateCaller();
         }
-        
-       /* async void Start()
-        {
-            SilksongModPlugin.Log.LogInfo("START CALLED");
-            await server.JoinGlobalLobby(CurrSteamID, CurrName);
-        }*/
+
+        /* async void Start()
+         {
+             SilksongModPlugin.Log.LogInfo("START CALLED");
+             await server.JoinGlobalLobby(CurrSteamID, CurrName);
+         }*/
 
         public void Update()
         {
@@ -93,13 +100,58 @@ namespace SilksongMod
                 if (CurrScene != "MAINMENU" && script.scene == CurrScene)
                 {
                     script.gameObject.SetActive(true);
+                    // use different stuff for compassicon tracking
                 }
-                else {
+                else
+                {
                     script.gameObject.SetActive(false);
+                    /* if (script.compassIcon == null)
+                     {
+                         SilksongModPlugin.Log.LogInfo("Compass Icon is null! how?");
+                         continue;
+                     }
+                     if (!gameMap)
+                     {
+                         SilksongModPlugin.Log.LogInfo("null gamemap!");
+                     }
+
+                     if (!inventoryWideMap)
+                     {
+                         SilksongModPlugin.Log.LogInfo("null inventorywidemap!");
+                     }
+
+                     if (gameMap && inventoryWideMap && script.compassIcon.activeInHierarchy)
+                     {
+                         SilksongModPlugin.Log.LogInfo("IT'S ACTIVE RIGHT NOW!! COMPASS!!");
+                         MapZone zone = caller.CallGetMapZone(gameMap, script.scene);
+                         Vector2 pos = GetMapLocationForScene(script.scene, zone);
+                         caller.CallPositionIcon(inventoryWideMap, script.compassIcon.transform, pos, true, zone);
+                     }*/
                 }
             }
+
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                SilksongModPlugin.Log.LogInfo("Space pressed");
+                /*foreach (SyncedHornetScript script in LobbyPlayers.Values)
+                {
+                    if (script.compassIcon == null)
+                    {
+                        SilksongModPlugin.Log.LogInfo("Compass Icon is null! HOW PLS HELP ME");
+                        continue;
+                    }
+                    if (script.compassIcon.activeInHierarchy)
+                    {
+                        SilksongModPlugin.Log.LogInfo("IT'S ACTIVE RIGHT NOW!!! WWWWW compass good ");
+                    }
+                    else
+                    {
+                        SilksongModPlugin.Log.LogInfo("inactive compass");
+                    }
+                }*/
+            }
         }
-        
+
         private void OnDestroy()
         {
             SilksongModPlugin.Log.LogInfo("LOBBY MAANGER DESTROYED. Sending Leave button.");
@@ -113,40 +165,51 @@ namespace SilksongMod
         }
 
         #endregion
-        
+
         #region Button Listeners
+
         public static void JoinButtonPressed(string buttonName)
         {
-            if (buttonName == "Join") // if join pressed, join the lobby and send to everyone in lobby that you've joined
+            if (buttonName ==
+                "Join") // if join pressed, join the lobby and send to everyone in lobby that you've joined
             {
                 if (PendingLobbyBuffer.IsNullOrEmpty())
                 {
-                    SilksongModPlugin.Log.LogError("PENDING LOBBY BUFFER IS NULL/EMPTY; Incorrect Join request. Please invite the player first!");
+                    SilksongModPlugin.Log.LogError(
+                        "PENDING LOBBY BUFFER IS NULL/EMPTY; Incorrect Join request. Please invite the player first!");
                     return;
                 }
-                
-                SilksongModPlugin.Log.LogInfo($"player accepted {JoinDisplay.currName}'s ({JoinDisplay.currSteamID}) join request");
+
+                SilksongModPlugin.Log.LogInfo(
+                    $"player accepted {JoinDisplay.currName}'s ({JoinDisplay.currSteamID}) join request");
                 // first, set the current player dictionary to the new one, and add yourself into it
-                Dictionary<CSteamID, SyncedHornetScript> temp = new Dictionary<CSteamID, SyncedHornetScript>(); // incase one of the members already exist in lobby
+                Dictionary<CSteamID, SyncedHornetScript>
+                    temp =
+                        new Dictionary<CSteamID,
+                            SyncedHornetScript>(); // incase one of the members already exist in lobby
                 foreach (var player in PendingLobbyBuffer)
                 {
                     if (LobbyPlayers.ContainsKey(player.Key))
                     {
-                        SilksongModPlugin.Log.LogInfo($"Player {player.Value} is already in lobby! Incorrect Join Request.");
+                        SilksongModPlugin.Log.LogInfo(
+                            $"Player {player.Value} is already in lobby! Incorrect Join Request.");
                         return;
                     }
+
                     SyncedHornetScript script = CreateHornet(player.Key, player.Value, "temp"); // not set yet
                     temp.Add(player.Key, script);
                 }
+
                 //after ensuring nobody is duplicated in lobby, set players to the new temp dict and send to all players in lobby
                 LobbyPlayers = temp;
-                PendingLobbyBuffer.Clear();  // remove previous lobbybuffer reference for safety
+                PendingLobbyBuffer.Clear(); // remove previous lobbybuffer reference for safety
                 byte[] data = Serializer.SerializeSinglePlayer(CurrSteamID, CurrName, CurrScene);
                 //send confirmation of join as a SteamPlayer to all of the people in the new lobby
                 foreach (CSteamID steamID in LobbyPlayers.Keys)
                 {
                     SteamP2PSender.SendData(steamID, data, P2PChannel.Lobby); // send current scene now
                 }
+
                 UpdateLobbyUI();
             }
             else // cancel pressed
@@ -154,14 +217,15 @@ namespace SilksongMod
                 SilksongModPlugin.Log.LogInfo($"player canceled join request");
                 SteamNetworking.CloseP2PSessionWithUser(JoinDisplay.currSteamID); // canceled, so close session
             }
+
             JoinDisplay.SetVisible(false);
         }
-        
+
         public void DisplayInvite()
         {
             InviteButtonScript.CreateFriendLayout(gameObject);
         }
-        
+
         public static void LeaveButtonPressed()
         {
             SilksongModPlugin.Log.LogInfo("Leave button pressed.");
@@ -170,20 +234,25 @@ namespace SilksongMod
                 // if you are leaving the global lobby, make sure to send the server that you are leaving as well
                 server.LeaveGlobalLobby(CurrSteamID, CurrName);
             }
+
             //first send to all people in lobby
             SendLeaveToLobby();
             ResetLobby();
         }
+
         #endregion
-        
+
         #region Lobby Commands
+
         // add new player to lobby (no checks, direct)
         public static void AddPlayerToLobby((CSteamID steamID, string name, string scene) playerData)
         {
             SilksongModPlugin.Log.LogInfo($"Adding player {playerData.steamID}. Haven't recieved scene yet.");
             ChatDisplay.AddPlayerJoinText(playerData.name);
             // to add a player, you need to add it to the dictionary and update the ui
-            SyncedHornetScript script = CreateHornet(playerData.steamID, playerData.name, playerData.scene); // createhornet does appending to dictionary for you
+            SyncedHornetScript
+                script = CreateHornet(playerData.steamID, playerData.name,
+                    playerData.scene); // createhornet does appending to dictionary for you
             LobbyPlayers.Add(playerData.steamID, script);
             UpdateLobbyUI(); // upadte your own lobby
         }
@@ -196,7 +265,7 @@ namespace SilksongMod
                 SteamP2PSender.SendData(player, data, P2PChannel.Lobby);
             }
         }
-        
+
         public static void SendDataToLobby(byte[] data, P2PChannel channel)
         {
             if (CurrScene != "MAINMENU")
@@ -210,7 +279,15 @@ namespace SilksongMod
                 }
             }
         }
-        
+
+        public static void SendLobbyDataToLobby(byte[] data)
+        {
+            foreach (SyncedHornetScript script in LobbyPlayers.Values)
+            {
+                SteamP2PSender.SendData(script.steamID, data, P2PChannel.Lobby);
+            }
+        }
+
         public static void ActivateHornets(bool active)
         {
             foreach (SyncedHornetScript hornet in LobbyPlayers.Values)
@@ -218,14 +295,15 @@ namespace SilksongMod
                 hornet.gameObject.SetActive(active);
             }
         }
-        
+
         public static void UpdateSyncedHornetPos(CSteamID steamID, PlayerPosData posData)
         {
             SyncedHornetScript hornet = LobbyPlayers[steamID];
             hornet.UpdatePosition(posData);
         }
-        
+
         #endregion
+
         // incase we want to show the lobby contents as well
         public static void CreateJoin(CSteamID sender, Dictionary<CSteamID, string> lobby)
         {
@@ -239,8 +317,9 @@ namespace SilksongMod
                 }
             }
         }
-        
-        public static void UpdateSceneForPlayer(CSteamID sender, string scene) {
+
+        public static void UpdateSceneForPlayer(CSteamID sender, string scene)
+        {
             if (LobbyPlayers.TryGetValue(sender, out SyncedHornetScript script))
             {
                 script.scene = scene;
@@ -248,7 +327,8 @@ namespace SilksongMod
             }
             else
             {
-                SilksongModPlugin.Log.LogError($"ERROR: Couldn't find syncedhornetscript for player {sender}, something bad happeneed");
+                SilksongModPlugin.Log.LogError(
+                    $"ERROR: Couldn't find syncedhornetscript for player {sender}, something bad happeneed");
             }
         }
 
@@ -266,7 +346,7 @@ namespace SilksongMod
                 SteamP2PSender.SendCurrSceneToPlayer(player, CurrScene);
             }
         }
-        
+
         public static void SetHostHornet(GameObject hornet)
         {
             HostHornet = hornet;
@@ -290,7 +370,7 @@ namespace SilksongMod
                 SilksongModPlugin.Log.LogInfo("Player didn't exist in the first place. Must have canceled p2p.");
             }
         }
-        
+
         #region Helper Methods
 
         private static void UpdateLobbyUI()
@@ -300,30 +380,36 @@ namespace SilksongMod
                 LobbyDisplay.UpdatePlayerList(LobbyPlayers);
             }
         }
-        
+
         public static SyncedHornetScript CreateHornet(CSteamID steamID, string name, string scene)
         {
             GameObject syncedHornet = new GameObject("SyncedHornet");
             // VERY IMPORTANT: Add script after setting not active
             syncedHornet.SetActive(false);
-            SyncedHornetScript script = syncedHornet.AddComponent<SyncedHornetScript>(); 
+            SyncedHornetScript script = syncedHornet.AddComponent<SyncedHornetScript>();
             script.steamID = steamID;
             script.name = name;
             script.scene = scene;
-           // LobbyPlayers.Add(steamID, script);
+            // LobbyPlayers.Add(steamID, script);
             DontDestroyOnLoad(syncedHornet);
-            
+
             SilksongModPlugin.Log.LogInfo("Created Hornet.");
+
+            if (CompassIcon != null)
+            {
+                script.compassIcon = Instantiate(CompassIcon, syncedHornet.transform);
+                script.compassIcon.SetActive(true);
+            }
             return script;
         }
-        
+
         private static void ResetLobby()
         {
             CurrName = SteamFriends.GetPersonaName();
             CurrSteamID = SteamUser.GetSteamID();
             LobbyPlayers.Clear();
             PendingLobbyBuffer.Clear();
-            
+
             UpdateLobbyUI(); // Update lobby with current player stats
         }
 
@@ -331,7 +417,7 @@ namespace SilksongMod
         {
             NABListIndex.Clear(); // clear everything because new memory references
             NailAttackBase[] NABList =
-                    hornet.gameObject.GetComponentsInChildren<NailAttackBase>(true);
+                hornet.gameObject.GetComponentsInChildren<NailAttackBase>(true);
             // used to retrieve the index with O(1) search instead of O(n)
             for (int i = 0; i < NABList.Length; i++)
             {
@@ -349,11 +435,12 @@ namespace SilksongMod
             {
                 SteamP2PSender.SendData(sender, new byte[1] { (byte)LobbyCommand.Ping }, P2PChannel.Attack);
             }
+
             // do this some other way
             /*if (HitEnemy) // if the hit registers and player loses health, send hit confirmation
             {
                 SilksongModPlugin.Log.LogInfo("hit is registered successfully! sending now.");
-                
+
                 HitEnemy = false;
             }
             else
@@ -362,19 +449,19 @@ namespace SilksongMod
             }*/
             HitEnemy = false;
         }
-        
+
         #endregion
 
         #region UDP
 
         public static void SendJoinLobby(string lobbyName)
         {
-            
+
         }
 
         public static void SendHostLobby(string lobbyName)
         {
-            
+
         }
 
         #endregion
@@ -384,7 +471,7 @@ namespace SilksongMod
             ChatDisplay.AddPlayerText(CurrName, msg);
             SilksongModPlugin.Log.LogInfo("sent message!");
             byte[] data = Serializer.SerializeMessage(CurrName, msg);
-            SendDataToLobby(data, P2PChannel.Lobby);
+            SendLobbyDataToLobby(data);
         }
 
         public static void FreezeGame()
@@ -396,6 +483,25 @@ namespace SilksongMod
         public static void UnfreezeGame()
         {
             Time.timeScale = 1f;
+        }
+
+        public static void SetCompassIcon(GameObject compassIcon)
+        {
+            CompassIcon = compassIcon;
+            foreach (SyncedHornetScript script in LobbyPlayers.Values)
+            {
+                if (script.compassIcon == null)
+                {
+                    script.compassIcon = GameObject.Instantiate(compassIcon, compassIcon.transform.parent);
+                    script.compassIcon.SetActive(true);
+                }
+            }
+        }
+
+        private static Vector2 GetMapLocationForScene(string scene, MapZone zone)
+        {
+            caller.CallGetSceneInfo(gameMap, scene, zone, out GameMapScene mapScene, out var sceneObj, out var scenePos);
+            return caller.CallGetMapPosition(gameMap, scenePos, mapScene, sceneObj, scenePos, Vector2.zero);
         }
     }
 }

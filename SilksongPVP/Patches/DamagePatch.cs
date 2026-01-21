@@ -15,14 +15,14 @@ namespace SilksongMod.Patches
         public static bool Prefix(DamageEnemies __instance, Collider2D collision) 
         {
            //PrintFullHierarchyInfo(__instance.gameObject);
-           SilksongModPlugin.Log.LogInfo("path of " + __instance.name + ": " + GetFullPath(__instance.transform));
+           //SilksongModPlugin.Log.LogInfo("path of " + __instance.name + ": " + GetFullPath(__instance.transform));
           //  SilksongModPlugin.Log.LogInfo($"TriggerEnter2D: hit some object! idk what. Curr Object: trigger: {__instance.gameObject.GetComponent<Collider2D>().isTrigger}");
-            PhysLayers layer = (PhysLayers)((Component)(object)collision).gameObject.layer;
-            SilksongModPlugin.Log.LogInfo($"Layer of object: {layer}");
+           // PhysLayers layer = (PhysLayers)((Component)(object)collision).gameObject.layer;
+            //SilksongModPlugin.Log.LogInfo($"Layer of object: {layer}");
             
             if (collision.gameObject.TryGetComponent<SyncedHornetScript>(out var script) && (__instance.attackType == AttackTypes.Nail || __instance.attackType == AttackTypes.Spell))
             {
-                SilksongModPlugin.Log.LogInfo("attack type: " + __instance.attackType);
+                //SilksongModPlugin.Log.LogInfo("attack type: " + __instance.attackType);
                 //SilksongModPlugin.Log.LogInfo("hit synced hornet! sending hit");
                 script.TakeDamage();
                 //return false;
@@ -82,7 +82,7 @@ namespace SilksongMod.Patches
     }
 
     // Recursively print all children and their components
-    private static void PrintChildrenRecursive(Transform parent)
+    public static void PrintChildrenRecursive(Transform parent)
     {
         PrintComponents(parent);
 

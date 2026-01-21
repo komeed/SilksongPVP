@@ -1,20 +1,36 @@
 using HarmonyLib;
+using UnityEngine;
+
 namespace SilksongMod.Patches
 {
-    [HarmonyPatch(typeof(GameMap), "GetCompassPositionLocalBounds")]
+    /*[HarmonyPatch(typeof(GameMap), "Awake")]
     public static class CompassPatch
     {
         [HarmonyPrefix]
         public static void Prefix(GameMap __instance)
         {
-            if (!LobbyManager.foundTraverseMethod)
+            LobbyManager.gameMap = __instance;
+            GameObject compassIcon = __instance.transform.Find("Compass Icon").gameObject;
+            if (compassIcon == null)
             {
-                Traverse method = Traverse.Create(__instance).Method("PrivateInternalUpdate");
-                if (method.MethodExists())
-                {
-                    
-                }
+                SilksongModPlugin.Log.LogInfo("COULDN'T FIND COMPASS ICON! this is bad.");
             }
+            else
+            {
+                SilksongModPlugin.Log.LogInfo("Found Compass Icon!");
+                LobbyManager.SetCompassIcon(compassIcon);
+            }
+            //DamagePatch.PrintChildrenRecursive(__instance.transform);
         }
     }
+    [HarmonyPatch(typeof(InventoryWideMap), "UpdatePositions")]
+    public static class InventoryWideMapPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(InventoryWideMap __instance)
+        {
+            LobbyManager.inventoryWideMap = __instance;
+            SilksongModPlugin.Log.LogInfo("set inventorywidemap!");
+        }
+    }*/
 }

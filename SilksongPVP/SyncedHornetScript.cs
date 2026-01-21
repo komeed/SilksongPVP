@@ -27,7 +27,10 @@ namespace SilksongMod
         private MeshRenderer _renderer;
         
         private TextMesh _text;
-        public static float yOffset = 2f;
+        private static float yOffset = 2f;
+
+        public GameObject compassIcon;
+        private bool foundCompassIcon;
 
         private void Awake()
         {
@@ -98,6 +101,7 @@ namespace SilksongMod
         private void Start()
         {
             SilksongModPlugin.Log.LogInfo("First frame of Synced Hornet.");
+            
         }
 
         private void Update()
@@ -118,7 +122,9 @@ namespace SilksongMod
 
         void OnDestroy()
         {
-            SilksongModPlugin.Log.LogInfo($"Synced Hornet for Player {name} WAS DESTROYED. HOW???");
+            SilksongModPlugin.Log.LogInfo(
+                $"Synced Hornet for Player {name} was destroyed. Destroying CompassIcon for that hornet.");
+            Destroy(compassIcon);
         }
 
         public void UpdatePosition(PlayerPosData posData)
