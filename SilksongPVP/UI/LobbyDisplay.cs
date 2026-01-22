@@ -20,6 +20,9 @@ namespace SilksongMod
 
         private static Font font;
 
+        private static Text lobbyText;
+        private static int lobbyID = -1;
+
         // Initialize the notification panel
         public static void Init(GameObject p, Font f)
         {
@@ -44,7 +47,12 @@ namespace SilksongMod
         public static void UpdatePlayerList(Dictionary<CSteamID, SyncedHornetScript> players, int fontSize = 16)
         { 
             ClearAll();
-            AddText("Lobby:", fontSize + 2);
+            string txt = "Lobby:";
+            if (lobbyID != -1)
+            {
+                txt = $"Lobby: (ID: {lobbyID})";
+            }
+            lobbyText = AddText(txt, fontSize + 2);
             CreateLeaveButton(AddText(LobbyManager.CurrName, fontSize).gameObject, fontSize);
             foreach (KeyValuePair<CSteamID, SyncedHornetScript> player in players)
             {
@@ -171,6 +179,16 @@ namespace SilksongMod
         public static void SetPanelActive(bool active)
         {
             lobbyPanel.SetActive(active);
+        }
+
+        public static void SetLobbyIDText(int id)
+        {
+            lobbyID = id;
+        }
+
+        public static void ClearLobbyID()
+        {
+            lobbyID = -1;
         }
     }
 }

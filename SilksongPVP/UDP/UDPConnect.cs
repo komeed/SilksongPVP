@@ -15,19 +15,22 @@ namespace SilksongMod.SteamP2P
         private UdpClient udpClient;
         private string remoteIP;
         private int remotePort;
-        
+
         private bool listening = false;
         public bool isServer;
+
+        private TaskCompletionSource<Dictionary<ulong, string>> lobbyResponseTcs;
+
         public void Init(string remoteIP, int remotePort, bool isServer)
         {
             this.remoteIP = remoteIP;
             this.remotePort = remotePort;
             udpClient = new UdpClient();
             udpClient.Connect(IPAddress.Parse(remoteIP), remotePort);
-            this.isServer = isServer;
-      //      StartListening();
+            this.isServer = isServer; 
+            _ = StartListening();
         }
-        
+
         void OnDestroy()
         {
             listening = false;
@@ -45,15 +48,39 @@ namespace SilksongMod.SteamP2P
         private async Task StartListening()
         {
             listening = true;
-
             while (listening)
             {
                 try
                 {
                     UdpReceiveResult result = await udpClient.ReceiveAsync();
-                    string message = Encoding.UTF8.GetString(result.Buffer);
-                    SilksongModPlugin.Log.LogInfo($"Received from {result.RemoteEndPoint}: {message}");
-                    //HandleMessage(message);
+                    byte[] data = result.Buffer;
+                    if (data.Length == 0)
+                    {
+                        SilksongModPlugin.Log.LogError("EXTREMELY WEIRD MESSAGE WTF?");
+                    }
+                    else
+                    {
+                        if (data[0] == (byte)UDPCommand.Ping)
+                        {
+                            SilksongModPlugin.Log.LogInfo("PING RECEIVED from server! sending pong.");
+                            byte[] newData =
+                                Serializer.SerializeSteamID(UDPCommand.Pong, LobbyManager.CurrSteamID.m_SteamID);
+                            udpClient.Send(newData, newData.Length);
+                        }
+
+                        if (data[0] == (byte)UDPCommand.JoinGlobalLobby)
+                        {
+                            SilksongModPlugin.Log.LogInfo("Joining lobby");
+                            (int lobbyID, Dictionary<ulong, string> dict) = Deserializer.DeserializeLobbyPlayerDict(data);
+                            LobbyDisplay.SetLobbyIDText(lobbyID);
+                            if (lobbyResponseTcs != null && !lobbyResponseTcs.Task.IsCompleted)
+                            {
+                                lobbyResponseTcs.SetResult(dict);
+                            }
+
+                            ProcessLobbyDict(dict);
+                        }
+                    }
                 }
                 catch (ObjectDisposedException)
                 {
@@ -67,43 +94,7 @@ namespace SilksongMod.SteamP2P
                 catch (Exception ex)
                 {
                     SilksongModPlugin.Log.LogInfo("Unexpected error in UDP listener: " + ex);
-                    
-                }
-            }
-        }
-        
-        public async Task SendPingAndMessage(byte[] messageData)
-        {
-            if (udpClient == null)
-            { 
-                SilksongModPlugin.Log.LogInfo("UDP client not initialized!");
-                return;
-            }
 
-            // 1️⃣ Send ping
-            byte[] pingData = Encoding.UTF8.GetBytes("ping");
-            udpClient.Send(pingData, pingData.Length);
-            SilksongModPlugin.Log.LogInfo($"Ping sent: ping");
-
-            // 2️⃣ Wait for response (~1 second)
-            UdpReceiveResult? result = await ReceiveWithTimeout(1000); // 1000ms = 1 sec
-
-            if (result.HasValue)
-            {
-                string reply = Encoding.UTF8.GetString(result.Value.Buffer);
-                SilksongModPlugin.Log.LogInfo($"Ping reply received from {result.Value.RemoteEndPoint}: {reply}");
-
-                // 3️⃣ Send the actual message
-                udpClient.Send(messageData, messageData.Length);
-                SilksongModPlugin.Log.LogInfo($"Message sent: {messageData.Length} bytes");
-            }
-            else
-            {
-                SilksongModPlugin.Log.LogInfo("No ping reply received. Message not sent.");
-                if (isServer)
-                {
-                    SilksongModPlugin.Log.LogInfo("no ping reply received from server. Server is not working right now.");
-                //    InviteButtonScript.CreateErrorLayout(SilksongModPlugin.canvas.gameObject, "Server is not on right now. Please connect via steam, or try again later.");
                 }
             }
         }
@@ -112,45 +103,67 @@ namespace SilksongMod.SteamP2P
 
         public async Task JoinGlobalLobby(CSteamID steamID, string name)
         {
-            SilksongModPlugin.Log.LogInfo("Called joingloballobby method");
+            SilksongModPlugin.Log.LogInfo("Called JoinGlobalLobby method");
+
+            // Prepare message
             byte[] data = Serializer.SteamIDNameToBytes(UDPCommand.JoinGlobalLobby, steamID.m_SteamID, name);
             await udpClient.SendAsync(data, data.Length);
-            SilksongModPlugin.Log.LogInfo("sent data");
-            // Start waiting for response
-            Task<UdpReceiveResult> receiveTask = udpClient.ReceiveAsync();
-            Task delayTask = Task.Delay(1000); // 1 second timeout
-            SilksongModPlugin.Log.LogInfo("Reached here");
+            SilksongModPlugin.Log.LogInfo("Sent join lobby request");
 
-            // Wait for either receive or timeout
-            Task finishedTask = await Task.WhenAny(receiveTask, delayTask);
-            SilksongModPlugin.Log.LogInfo("and here");
-            if (finishedTask == receiveTask)
+            // Create a TaskCompletionSource to wait for response
+            lobbyResponseTcs = new TaskCompletionSource<Dictionary<ulong, string>>();
+
+            // Wait for either response or timeout
+            Task delayTask = Task.Delay(2000); // 1.2 seconds
+            Task finishedTask = await Task.WhenAny(lobbyResponseTcs.Task, delayTask);
+
+            if (finishedTask == lobbyResponseTcs.Task)
             {
-
-                // Response received
-                UdpReceiveResult result = receiveTask.Result;
-
-                SilksongModPlugin.Log.LogInfo("Received response from server");
-                byte[] buffer = result.Buffer;
-                Dictionary<ulong, string> dict = Deserializer.DeserializeLobbyPlayerDict(buffer);
-                byte[] singlePlayerData = Serializer.SerializeSinglePlayer(LobbyManager.CurrSteamID, LobbyManager.CurrName, LobbyManager.CurrScene);
+                Dictionary<ulong, string> dict = lobbyResponseTcs.Task.Result;
+                SilksongModPlugin.Log.LogInfo("Lobby response received from server");
+                // Continue processing
                 foreach (var x in dict)
                 {
                     CSteamID newID = new CSteamID(x.Key);
                     if (newID != LobbyManager.CurrSteamID)
                     {
-                        SilksongModPlugin.Log.LogInfo($"joining player in lobby: {x.Key}: {x.Value}");
+                        SilksongModPlugin.Log.LogInfo($"Joining player in lobby: {x.Key}: {x.Value}");
+                        // send your local player data via P2P
+                        byte[] singlePlayerData = Serializer.SerializeSinglePlayer(LobbyManager.CurrSteamID,
+                            LobbyManager.CurrName, LobbyManager.CurrScene);
                         SteamP2PSender.SendData(newID, singlePlayerData, P2PChannel.Lobby);
-                        SyncedHornetScript script = LobbyManager.CreateHornet(newID, x.Value, "temp"); 
+                        SyncedHornetScript script = LobbyManager.CreateHornet(newID, x.Value, "temp");
                         LobbyManager.LobbyPlayers.Add(newID, script);
                     }
-                } 
+                }
             }
             else
             {
-                SilksongModPlugin.Log.LogInfo("no ping reply received from server. Server is not working right now.");
-                InviteButtonScript.CreateErrorLayout(SilksongModPlugin.canvas.gameObject, 
-                    "Server is not on right now. Please connect via steam, or try again later.");
+                SilksongModPlugin.Log.LogInfo("No response from server after 2 seconds!");
+                InviteButtonScript.CreateErrorLayout(
+                    SilksongModPlugin.canvas.gameObject,
+                    "Server is not on right now. Please connect via Steam, or try again later."
+                );
+            }
+
+            // Reset the TCS so it can be reused later
+            lobbyResponseTcs = null;
+        }
+
+        public void ProcessLobbyDict(Dictionary<ulong, string> dict)
+        {
+            byte[] singlePlayerData = Serializer.SerializeSinglePlayer(LobbyManager.CurrSteamID, LobbyManager.CurrName,
+                LobbyManager.CurrScene);
+            foreach (var x in dict)
+            {
+                CSteamID newID = new CSteamID(x.Key);
+                if (newID != LobbyManager.CurrSteamID)
+                {
+                    SilksongModPlugin.Log.LogInfo($"joining player in lobby: {x.Key}: {x.Value}");
+                    SteamP2PSender.SendData(newID, singlePlayerData, P2PChannel.Lobby);
+                    SyncedHornetScript script = LobbyManager.CreateHornet(newID, x.Value, "temp");
+                    LobbyManager.LobbyPlayers.Add(newID, script);
+                }
             }
         }
 
@@ -159,96 +172,6 @@ namespace SilksongMod.SteamP2P
             SilksongModPlugin.Log.LogInfo("Called leavegloballobby method");
             byte[] data = Serializer.SteamIDNameToBytes(UDPCommand.LeaveGlobalLobby, steamID.m_SteamID, name);
             await udpClient.SendAsync(data, data.Length);
-            // Start waiting for response
-            Task<UdpReceiveResult> receiveTask = udpClient.ReceiveAsync();
-            Task delayTask = Task.Delay(1000); // 1 second timeout
-
-            // Wait for either receive or timeout
-            Task finishedTask = await Task.WhenAny(receiveTask, delayTask);
-            if (finishedTask == receiveTask)
-            {
-                UdpReceiveResult result = receiveTask.Result;
-                SilksongModPlugin.Log.LogInfo("Received response from server");
-            }
-            else
-            {
-                SilksongModPlugin.Log.LogInfo("no ping reply received from server. Server is not working right now.");
-                //InviteButtonScript.CreateErrorLayout(SilksongModPlugin.canvas.gameObject, 
-                 //   "Server is not on right now. Please connect via steam, or try again later.");
-            }
-        }
-        
-        public async Task SendLobbyMessage(UDPCommand command, string lobbyName, byte[] messageData) {
-            // Encode lobby name
-            byte[] lobbyNameBytes = Encoding.UTF8.GetBytes(lobbyName);
-            ushort nameLen = (ushort)lobbyNameBytes.Length;
-            // Allocate: 1 byte command + lobby name + message data
-            byte[] message = new byte[1 + 2 + nameLen + messageData.Length];
-
-            int offset = 0;
-            message[offset++] = (byte)command;
-            // Name length (little-endian)
-            message[offset++] = (byte)(nameLen & 0xFF);
-            message[offset++] = (byte)((nameLen >> 8) & 0xFF);
-            
-            Buffer.BlockCopy(lobbyNameBytes, 0, message, offset, lobbyNameBytes.Length);
-            offset += nameLen;
-            
-            Buffer.BlockCopy(messageData, 0, message, offset, messageData.Length);
-            // Send
-            await udpClient.SendAsync(message, message.Length);
-
-            // Start waiting for response
-            Task<UdpReceiveResult> receiveTask = udpClient.ReceiveAsync();
-            Task delayTask = Task.Delay(1000); // 1 second timeout
-
-            // Wait for either receive or timeout
-            Task finishedTask = await Task.WhenAny(receiveTask, delayTask);
-
-            if (finishedTask == receiveTask)
-            {
-                // Response received
-                UdpReceiveResult result = receiveTask.Result;
-
-                SilksongModPlugin.Log.LogInfo("Received response from server");
-                byte[] buffer = result.Buffer;
-                if (buffer[0] != 0) // 0 is error, 1 is good
-                {
-                    // I was thinking to send the current users that are in the lobby that aren't steam,
-                    // but then I realized that this is never possible.
-                    // so let's just skip this for now.
-                }
-                else
-                {
-                  //  SilksongModPlugin.Log.LogInfo("Server encountered an error!");
-                  //  InviteButtonScript.CreateErrorLayout(SilksongModPlugin.canvas.gameObject, 
-                      //  "Server encountered an error. Please connect via steam, or try again later.");
-                }
-            }
-            else
-            {
-                SilksongModPlugin.Log.LogInfo("no ping reply received from server. Server is not working right now.");
-            //    InviteButtonScript.CreateErrorLayout(SilksongModPlugin.canvas.gameObject, 
-                    //"Server is not on right now. Please connect via steam, or try again later.");
-            }
-        }
-        
-        
-        private async Task<UdpReceiveResult?> ReceiveWithTimeout(int millisecondsTimeout)
-        {
-            var receiveTask = udpClient.ReceiveAsync();
-            var delayTask = Task.Delay(millisecondsTimeout);
-
-            var completedTask = await Task.WhenAny(receiveTask, delayTask);
-
-            if (completedTask == receiveTask)
-            {
-                return receiveTask.Result;
-            }
-
-            // Timeout
-            return null;
         }
     }
-
 }

@@ -4,8 +4,6 @@ using TMPro;
 
 namespace SilksongMod
 {
-    using UnityEngine;
-    using UnityEngine.UI;
 
     public static class ChatDisplay
     {
@@ -17,24 +15,23 @@ namespace SilksongMod
         private static GameObject rootLayout;
         public static Font customFont;
 
-        public static CustomInputField textBox;
+        public static ChatInputField textBox;
 
         private static Vector2 ChatSize = new Vector2(300, 400);
-        private static int chatBoxHeight = 20;
+        private static int chatBoxHeight = 40;
         private static int chatHeight = 20;
 
-        public static void Init(GameObject parent, Font font)
+        private static Font defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
+
+        public static void Init(GameObject parent)
         {
             chatPanel = CreateContainer(parent);
             chatPanelRect = chatPanel.GetComponent<RectTransform>();
             rootLayout = CreateRootLayout(chatPanel);
             messagesContainer = CreateMessagesContainer(rootLayout);
             inputContainer = CreateInputContainer(rootLayout);
-            textBox = UIHelper.CreateTextBox(inputContainer, new Vector2(ChatSize.x, chatBoxHeight));
-            textBox.isChatText = true;
+            textBox = UIHelper.CreateChatTextBox(inputContainer, new Vector2(ChatSize.x, chatBoxHeight));
             textBox.transform.SetAsLastSibling();
-            textBox.DisplayText.resizeTextForBestFit = false;
-            textBox.DisplayText.fontSize = 18;
         }
 
         public static GameObject CreateContainer(GameObject parent)
@@ -148,7 +145,7 @@ namespace SilksongMod
                 messagesContainer,
                 $"{name}: {msg}",
                 new Vector2(ChatSize.x, chatHeight),
-                textBox.DisplayText.font,
+                defaultFont,
                 Color.white
             );
 
@@ -163,7 +160,7 @@ namespace SilksongMod
                 messagesContainer,
                 $"<color=red>Player {name} Left Lobby!</color>",
                 new Vector2(ChatSize.x, chatHeight),
-                textBox.DisplayText.font,
+                defaultFont,
                 Color.red
             );
 
@@ -178,7 +175,7 @@ namespace SilksongMod
                 messagesContainer,
                 $"<color=green>Player {name} Joined Lobby!</color>",
                 new Vector2(ChatSize.x, chatHeight),
-                textBox.DisplayText.font,
+                defaultFont,
                 Color.green
             );
 
@@ -210,6 +207,11 @@ namespace SilksongMod
             {
                 GameObject.Destroy(firstMessage.gameObject);
             }
+        }
+
+        public static void SetActive(bool active)
+        {
+            chatPanel.gameObject.SetActive(active);
         }
     }
 }

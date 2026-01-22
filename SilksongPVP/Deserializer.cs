@@ -270,10 +270,29 @@ namespace SilksongMod
             }
         }
 
-        public static Dictionary<ulong, string> DeserializeLobbyPlayerDict(byte[] data)
+        public static (int lobbyID, Dictionary<ulong, string> players) DeserializeLobbyPlayerDict(byte[] data)
         {
-            var dict = new Dictionary<ulong, string>();
+            if (data.Length < 5) // 1 byte command + 4 bytes lobbyID
+                throw new Exception("Data too short to contain command and lobby ID");
+
             int offset = 0;
+
+            // Skip the command byte
+            byte command = data[offset];
+            offset += 1;
+
+            // Read 4-byte lobby ID (little-endian)
+            if (offset + 4 > data.Length)
+            {
+                SilksongModPlugin.Log.LogInfo("length of data: " + data.Length);
+                throw new Exception("Unexpected end of data while reading lobby ID");
+            }
+
+            int lobbyID = BitConverter.ToInt32(data, offset);
+            offset += 4;
+
+            // Read player entries
+            var dict = new Dictionary<ulong, string>();
 
             while (offset < data.Length)
             {
@@ -301,8 +320,9 @@ namespace SilksongMod
                 dict[steamID] = name;
             }
 
-            return dict;
+            return (lobbyID, dict);
         }
+
         
         public static (string name, string message) DeserializeMessage(byte[] data)
         {

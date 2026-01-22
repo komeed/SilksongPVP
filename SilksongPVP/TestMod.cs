@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Net;
 using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using SilksongMod.SteamP2P;
@@ -43,6 +44,10 @@ namespace SilksongMod
         private bool showWarning;
         private Harmony harmony;
 
+        public static ConfigEntry<bool> ChatEnabled;
+        public static ConfigEntry<bool> LobbyDisplayEnabled; 
+        public static ConfigEntry<string> ChatKeyString;
+
         private void Awake()
         {
             canvasFound = false;
@@ -56,6 +61,10 @@ namespace SilksongMod
             reciever = gameObject.AddComponent<SteamP2PReceiver>();
             CreateFullScreenCanvas();
             CheckVersion();
+            
+            ChatEnabled = Config.Bind("General", "Chat Enabled", true, "Chat Enabled");
+            LobbyDisplayEnabled = Config.Bind("General", "Lobby Display Enabled", true, "Lobby Display Enabled");
+            ChatKeyString = Config.Bind("General", "Chat Key", "Return", "Chat Key");
         }
 
         private void Start()

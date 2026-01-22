@@ -3,6 +3,8 @@ namespace SilksongMod.SteamP2P
     public enum UDPCommand : byte
     {
         JoinGlobalLobby = 1,
-        LeaveGlobalLobby = 2
+        LeaveGlobalLobby = 2,
+        Ping = 3,
+        Pong = 4
     }
 }

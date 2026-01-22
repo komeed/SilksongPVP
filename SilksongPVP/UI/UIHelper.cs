@@ -112,26 +112,16 @@ namespace SilksongMod
             GameObject textGO = new GameObject(
                 "ChatText",
                 typeof(RectTransform),
-                typeof(Text),
                 typeof(LayoutElement)
             );
             SilksongModPlugin.Log.LogInfo("called createchattext with text " + text);
 
             textGO.transform.SetParent(parent.transform, false);
-
+            
             RectTransform rt = textGO.GetComponent<RectTransform>();
             rt.sizeDelta = size;
-            LayoutElement le = textGO.GetComponent<LayoutElement>();
-            if (le == null)
-            {
-                SilksongModPlugin.Log.LogError("this is somehow null?");
-                le = textGO.AddComponent<LayoutElement>();
-            }
 
-            le.preferredWidth = size.x;
-            le.preferredHeight = size.y;
-
-            Text txt = textGO.GetComponent<Text>();
+            Text txt = textGO.AddComponent<Text>();
 
             //txt.supportRichText = true;
             txt.alignment = TextAnchor.MiddleLeft;
@@ -143,6 +133,18 @@ namespace SilksongMod
             txt.text = text;
 
             txt.color = textColor;
+            float neededHeight = txt.preferredHeight; // Unity calculates height for wrapped text
+            LayoutElement le = textGO.GetComponent<LayoutElement>();
+            if (le == null)
+            {
+                SilksongModPlugin.Log.LogError("this is somehow null?");
+                le = textGO.AddComponent<LayoutElement>();
+            }
+
+            le.preferredWidth = size.x;
+            le.preferredHeight = neededHeight;
+            
+            rt.sizeDelta = new Vector2(size.x, neededHeight);
 
             return textGO;
         }
@@ -161,6 +163,21 @@ namespace SilksongMod
             le.preferredHeight = 40;
             CustomInputField inputField = go.AddComponent<CustomInputField>();
             inputField.MaxLength = maxLength;
+            return inputField;
+        }
+        
+        public static ChatInputField CreateChatTextBox(
+            GameObject parentCanvas, Vector2 size
+        )
+        {
+            // Root GameObject
+            GameObject go = new GameObject("CustomChatTextBox", typeof(RectTransform));
+            go.transform.SetParent(parentCanvas.transform, false);
+
+            LayoutElement le = go.AddComponent<LayoutElement>();
+            le.preferredWidth = size.x;
+            le.preferredHeight = size.y;
+            ChatInputField inputField = go.AddComponent<ChatInputField>();
             return inputField;
         }
 

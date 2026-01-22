@@ -133,6 +133,7 @@
         <Compile Include="UDP\UDPConnect.cs" />
         <Compile Include="UDP\UDPEnums.cs" />
         <Compile Include="UI\ChatDisplay.cs" />
+        <Compile Include="UI\ChatInputField.cs" />
         <Compile Include="UI\CustomInputField.cs" />
         <Compile Include="UI\InviteButtonScript.cs" />
         <Compile Include="UI\JoinDisplay.cs" />

@@ -137,12 +137,12 @@ namespace SilksongMod
             UIHelper.CreateText(container, "<size=48>ERROR</size>\n" + 
                                            "<size=18>" + errorMsg + "</size>", 
                 new Vector2(600, 140), Color.black, Color.white);
-            GameObject closeButton = UIHelper.CreateButtonFromParent(container, "Close", Color.gray, new Vector2(160, 40));
+            GameObject closeButton = UIHelper.CreateButtonFromParent(container, "Close (or press Esc)", Color.gray, new Vector2(160, 40));
             closeButton.GetComponent<Button>().onClick.AddListener(RemoveOverlay);
             //SilksongModPlugin.Log.LogInfo("ended here");
         }
         
-        private static void RemoveOverlay()
+        public static void RemoveOverlay()
         {
             Object.Destroy(overlayRoot);
         }
@@ -230,6 +230,15 @@ namespace SilksongMod
             SilksongModPlugin.Log.LogInfo("join button pressed! showing lobby name join.");
             RemoveOverlay();
             CreateJoinLobbyLayout(parentCanvas);
+        }
+
+        public static bool OverlayActive()
+        {
+            if (overlayRoot == null)
+            {
+                return false;
+            }
+            return overlayRoot.activeSelf;
         }
     }
 }

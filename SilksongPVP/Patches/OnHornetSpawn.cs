@@ -22,7 +22,7 @@ namespace SilksongMod
             {
                 SilksongModPlugin.Log.LogInfo("Spawned in global lobby!");
                 // first disable the lobby thing so that we don't invite/add/leave anyone
-                LobbyDisplay.SetPanelActive(false);
+               // LobbyDisplay.SetPanelActive(false);
                 LobbyManager.server.JoinGlobalLobby(LobbyManager.CurrSteamID, LobbyManager.CurrName);
             }
         }

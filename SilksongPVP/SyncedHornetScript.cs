@@ -29,8 +29,8 @@ namespace SilksongMod
         private TextMesh _text;
         private static float yOffset = 2f;
 
-        public GameObject compassIcon;
-        private bool foundCompassIcon;
+        public GameObject CompassIcon;
+        public bool foundCompassIcon;
 
         private void Awake()
         {
@@ -64,6 +64,34 @@ namespace SilksongMod
             _flash.enabled = true;
 
             _text = CreateTextComponent(gameObject, name);
+        }
+
+        public void CheckCompassIcon(GameObject compassIcon)
+        {
+            if (!foundCompassIcon)
+            {
+                SilksongModPlugin.Log.LogInfo("oops! how come the compassitem isn't found?");
+                if (CompassIcon != null)
+                {
+                    SetCompassIcon(Instantiate(CompassIcon, CompassIcon.transform.parent));
+                }
+                else
+                {
+                    SilksongModPlugin.Log.LogError("UPDATE IN LOBBYBEHAVIOR: compasicon not set!! wtf???");
+                }
+            }
+        }
+
+        public void SetCompassIcon(GameObject compassIcon)
+        {
+            if (compassIcon == null)
+            {
+                SilksongModPlugin.Log.LogError("SyncedHornet SetCompassIcon: CompassIcon is null!");
+                return;
+            }
+            RemoveAllButGraphics(compassIcon);
+            CompassIcon = compassIcon;
+            foundCompassIcon = true;
         }
 
         public static TextMesh CreateTextComponent(GameObject parent, string name)
@@ -124,7 +152,7 @@ namespace SilksongMod
         {
             SilksongModPlugin.Log.LogInfo(
                 $"Synced Hornet for Player {name} was destroyed. Destroying CompassIcon for that hornet.");
-            Destroy(compassIcon);
+            Destroy(CompassIcon);
         }
 
         public void UpdatePosition(PlayerPosData posData)

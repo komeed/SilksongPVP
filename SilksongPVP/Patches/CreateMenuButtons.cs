@@ -52,12 +52,14 @@ namespace SilksongMod
 
                 return;
             }
-
+            LobbyManager.showingFullMap = false; // safety
+            LobbyManager.showingQuickMap = false;
             if (LobbyManager.isGlobalLobby)
             {
+                LobbyDisplay.ClearLobbyID();
                 //show lobby after leaving
                 LobbyManager.LeaveButtonPressed();
-                LobbyDisplay.SetPanelActive(true);
+             //   LobbyDisplay.SetPanelActive(true);
                 LobbySwitch.SetToggleOff();
                 LobbyManager.isGlobalLobby = false; // just to be sure
             }
