@@ -6,92 +6,131 @@ using Steamworks;
 
 namespace SilksongMod
 {
-    public static class LobbyDisplay
+    public class LobbyDisplay : MonoBehaviour
     {
-        private static GameObject lobbyPanel;
-        private static List<Text> notificationTexts = new List<Text>();
-        private static GameObject leaveButton;
-        private static GameObject parent;
+        // private static GameObject lobbyPanel;
+        private List<Text> notificationTexts = new List<Text>();
+
+        // private GameObject leaveButton;
+        private GameObject parent;
 
         private const float TEXT_HEIGHT = 30f;
-        private const float PADDING = 10f;
-        
+        private const int PADDING = 10;
+
         private static Vector2 panelSize = new Vector2(300f, 500f);
 
-        private static Font font;
+        private static Font defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
-        private static Text lobbyText;
-        private static int lobbyID = -1;
+        private Text lobbyText;
+        private static int lobbyTextFontSize = 18;
 
-        // Initialize the notification panel
-        public static void Init(GameObject p, Font f)
+        private static int textFontSize = 16;
+        private Text showPlayersButtonText;
+        private bool showingPlayers = true;
+
+        private Button JoinPVPLobbyButton;
+
+        public void Awake()
         {
-            if (lobbyPanel != null) return;
+            CreateLayoutContainer();
+            lobbyText = AddText("Private Lobby: ", lobbyTextFontSize);
+            showPlayersButtonText = CreateShowPlayersButton(textFontSize);
+            CreateLeaveButton(AddText(LobbyManager.CurrName, textFontSize).gameObject, textFontSize);
+            JoinPVPLobbyButton = CreateJoinGlobalLobbyButton(textFontSize);
+        }
 
-            parent = p;
+        private void CreateLayoutContainer()
+        {
+            RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
+            if (rectTransform == null)
+            {
+                rectTransform = gameObject.AddComponent<RectTransform>();
+            }
 
-            // Create the notification panel
-            lobbyPanel = new GameObject("NotificationPanel");
-            lobbyPanel.transform.SetParent(parent.transform, false);
-
-            // Add RectTransform and position in top-left
-            RectTransform rectTransform = lobbyPanel.AddComponent<RectTransform>();
+// Anchor top-left (still fine for panels)
             rectTransform.anchorMin = new Vector2(0, 1);
             rectTransform.anchorMax = new Vector2(0, 1);
             rectTransform.pivot = new Vector2(0, 1);
             rectTransform.anchoredPosition = new Vector2(PADDING, -PADDING);
             rectTransform.sizeDelta = panelSize;
-            font = f;
+            
+            VerticalLayoutGroup layout = gameObject.GetComponent<VerticalLayoutGroup>();
+            if (layout == null)
+            {
+                layout = gameObject.AddComponent<VerticalLayoutGroup>();
+            }
+
+            layout.childAlignment = TextAnchor.UpperLeft;
+            layout.spacing = 6f;
+            layout.padding = new RectOffset(PADDING, PADDING, PADDING, PADDING);
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = false;
+            layout.childForceExpandHeight = false;
+
+// 🔹 Optional but VERY common: auto-size the panel
+            ContentSizeFitter fitter = gameObject.GetComponent<ContentSizeFitter>();
+            if (fitter == null)
+            {
+                fitter = gameObject.AddComponent<ContentSizeFitter>();
+            }
+
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
         }
 
-        public static void UpdatePlayerList(Dictionary<CSteamID, SyncedHornetScript> players, int fontSize = 16)
-        { 
+        public void Update()
+        {
+        }
+
+        public void UpdatePlayerList(Dictionary<CSteamID, SyncedHornetScript> players, int fontSize = 16)
+        {
             ClearAll();
-            string txt = "Lobby:";
-            if (lobbyID != -1)
-            {
-                txt = $"Lobby: (ID: {lobbyID})";
-            }
-            lobbyText = AddText(txt, fontSize + 2);
-            CreateLeaveButton(AddText(LobbyManager.CurrName, fontSize).gameObject, fontSize);
             foreach (KeyValuePair<CSteamID, SyncedHornetScript> player in players)
             {
-                AddText(player.Value.name, fontSize);
+                Text temp = AddText(player.Value.name, fontSize);
+                notificationTexts.Add(temp);
             }
+            JoinPVPLobbyButton.transform.SetAsLastSibling();
         }
-        // Add a new notification text
-        private static Text AddText(string message, int fontSize = 14)
+
+        // Add ae new notification text
+        private Text AddText(string message, int fontSize = 14)
         {
-            if (lobbyPanel == null)
-            {
-                SilksongModPlugin.Log.LogError("NotificationManager not initialized! Call Initialize() first.");
-                return null;
-            }
-
             GameObject textObj = new GameObject($"Notification_{notificationTexts.Count}");
-            textObj.transform.SetParent(lobbyPanel.transform, false);
+            textObj.transform.SetParent(transform, false);
 
-            // Add Text component
+            // --- Text ---
             Text text = textObj.AddComponent<Text>();
             text.text = message;
-            text.font = font;
+            text.font = defaultFont;
             text.fontSize = fontSize;
             text.color = Color.white;
             text.alignment = TextAnchor.UpperLeft;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
 
-            // Position the text vertically
-            RectTransform textRect = textObj.GetComponent<RectTransform>();
-            textRect.anchorMin = new Vector2(0, 1);
-            textRect.anchorMax = new Vector2(1, 1);
-            textRect.pivot = new Vector2(0, 1);
-            textRect.anchoredPosition = new Vector2(0, -notificationTexts.Count * TEXT_HEIGHT);
-            textRect.sizeDelta = new Vector2(0, TEXT_HEIGHT);
+            // --- RectTransform ---
+            RectTransform rt = textObj.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 1);
+            rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(0, 1);
 
-            notificationTexts.Add(text);
+            // Width controlled by parent, height by preferred size
+            rt.sizeDelta = new Vector2(0, 0);
+            // (Optional) Explicit layout hint
+            LayoutElement layout = textObj.GetComponent<LayoutElement>();
+            if (layout == null)
+                layout = textObj.AddComponent<LayoutElement>();
+
+            layout.minHeight = fontSize + 6f; // small safety padding
+            layout.preferredHeight = -1;      // let Text calculate height
+            //notificationTexts.Add(text);
             return text;
         }
 
-        public static void CreateLeaveButton(GameObject parentText, int fontSize = 14)
+
+        private void CreateLeaveButton(GameObject parentText, int fontSize = 14)
         {
             GameObject buttonGO = new GameObject("LeaveButton");
             buttonGO.transform.SetParent(parentText.transform, false);
@@ -120,7 +159,7 @@ namespace SilksongMod
             btnTextGO.transform.SetParent(buttonGO.transform, false);
             Text btnText = btnTextGO.AddComponent<Text>();
             btnText.text = "Leave";
-            btnText.font = font;
+            btnText.font = defaultFont;
             btnText.fontSize = fontSize;
             btnText.color = Color.white;
             btnText.alignment = TextAnchor.MiddleCenter;
@@ -135,60 +174,178 @@ namespace SilksongMod
             button.onClick.AddListener(LobbyManager.LeaveButtonPressed);
         }
 
-        // Remove a notification by index
-        public static void RemoveNotification(int index)
+        private Text CreateShowPlayersButton(int fontSize = 14)
         {
-            if (index < 0 || index >= notificationTexts.Count) return;
+            // --- Button GameObject ---
+            GameObject buttonObj = new GameObject("ShowPlayers");
+            buttonObj.transform.SetParent(transform, false);
 
-            Object.Destroy(notificationTexts[index].gameObject);
-            notificationTexts.RemoveAt(index);
+            // --- RectTransform ---
+            RectTransform rt = buttonObj.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 0.5f);
+            rt.anchorMax = new Vector2(0, 0.5f);
+            rt.pivot = new Vector2(0, 0.5f);
+            rt.sizeDelta = new Vector2(120, 32); // height only; width from layout
 
-            // Reposition remaining texts
-            for (int i = 0; i < notificationTexts.Count; i++)
+            // --- Button ---
+            Button button = buttonObj.AddComponent<Button>();
+            button.onClick.AddListener(OnShowPlayersClicked);
+
+            // --- Background Image (required for Button) ---
+            Image image = buttonObj.AddComponent<Image>();
+            image.color = Color.gray;
+
+            // --- Layout Element ---
+            LayoutElement layout = buttonObj.AddComponent<LayoutElement>();
+            layout.minHeight = 32;
+            layout.preferredHeight = 32;
+            layout.preferredWidth = 120;
+
+            // --- Text Child ---
+            GameObject textObj = new GameObject("Text");
+            textObj.transform.SetParent(buttonObj.transform, false);
+
+            Text text = textObj.AddComponent<Text>();
+            text.text = "Hide Players";
+            text.font = defaultFont;
+            text.fontSize = fontSize;
+            text.color = Color.white;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+
+            // --- Text RectTransform (fill button) ---
+            RectTransform textRT = textObj.GetComponent<RectTransform>();
+            textRT.anchorMin = Vector2.zero;
+            textRT.anchorMax = Vector2.one;
+            textRT.offsetMin = Vector2.zero;
+            textRT.offsetMax = Vector2.zero;
+
+            return text;
+        }
+        
+        private Button CreateJoinGlobalLobbyButton(int fontSize = 14)
+        {
+            // --- Button GameObject ---
+            GameObject buttonObj = new GameObject("JoinGlobalLobbyButton");
+            buttonObj.transform.SetParent(transform, false);
+
+            // --- RectTransform ---
+            RectTransform rt = buttonObj.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0, 0.5f);
+            rt.anchorMax = new Vector2(0, 0.5f);
+            rt.pivot = new Vector2(0, 0.5f);
+            rt.sizeDelta = new Vector2(120, 32); // height only; width from layout
+
+            // --- Button ---
+            Button button = buttonObj.AddComponent<Button>();
+            button.onClick.AddListener(OnJoinGlobalLobbyClicked);
+
+            // --- Background Image (required for Button) ---
+            Image image = buttonObj.AddComponent<Image>();
+            image.color = Color.gray;
+
+            // --- Layout Element ---
+            LayoutElement layout = buttonObj.AddComponent<LayoutElement>();
+            layout.minHeight = 32;
+            layout.preferredHeight = 40;
+            layout.preferredWidth = 150;
+
+            // --- Text Child ---
+            GameObject textObj = new GameObject("Text");
+            textObj.transform.SetParent(buttonObj.transform, false);
+
+            Text text = textObj.AddComponent<Text>();
+            text.text = "Join Public PVP Lobby";
+            text.font = defaultFont;
+            text.fontSize = fontSize;
+            text.color = Color.white;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+
+            // --- Text RectTransform (fill button) ---
+            RectTransform textRT = textObj.GetComponent<RectTransform>();
+            textRT.anchorMin = Vector2.zero;
+            textRT.anchorMax = Vector2.one;
+            textRT.offsetMin = Vector2.zero;
+            textRT.offsetMax = Vector2.zero;
+
+            return button;
+        }
+
+        private void OnJoinGlobalLobbyClicked()
+        {
+            if (!LobbyManager.isGlobalLobby)
             {
-                RectTransform rect = notificationTexts[i].GetComponent<RectTransform>();
-                rect.anchoredPosition = new Vector2(0, -i * TEXT_HEIGHT);
+                LobbyManager.JoinGlobalLobby();
+            }
+            else
+            {
+                InviteButtonScript.CreateErrorLayout(transform.parent.gameObject, "You are already in a public lobby! Leave this one first.");
             }
         }
 
+        private void OnShowPlayersClicked()
+        {
+            SilksongModPlugin.Log.LogInfo("show players clickcedd!!!");
+            if (showingPlayers)
+            {
+                showPlayersButtonText.text = "Show Players";
+                showingPlayers = false;
+                HideAll();
+
+            }
+            else
+            {
+                showPlayersButtonText.text = "Hide Players";
+                showingPlayers = true;
+                ShowAll();
+            }
+        }
+
+
         // Clear all notifications
-        public static void ClearAll()
+        public void ClearAll()
         {
             foreach (Text text in notificationTexts)
             {
                 if (text != null)
                     Object.Destroy(text.gameObject);
             }
-            Object.Destroy(leaveButton);
 
             notificationTexts.Clear();
         }
 
-        // Get all notification texts
-        public static List<Text> GetNotifications()
+        public void HideAll()
         {
-            return new List<Text>(notificationTexts);
+            foreach (Text text in notificationTexts)
+            {
+                text.gameObject.SetActive(false);
+            }
         }
 
-        // Get the notification panel GameObject
-        public static GameObject GetPanel()
+        public void ShowAll()
         {
-            return lobbyPanel;
+            foreach (Text text in notificationTexts)
+            {
+                text.gameObject.SetActive(true);
+            }
         }
 
-        public static void SetPanelActive(bool active)
+        public void SetPanelActive(bool active)
         {
-            lobbyPanel.SetActive(active);
+            gameObject.SetActive(active);
         }
 
-        public static void SetLobbyIDText(int id)
+        public void SetLobbyIDText(int id)
         {
-            lobbyID = id;
+            lobbyText.text = $"Public Lobby: (lobbyID = {id})";
         }
 
-        public static void ClearLobbyID()
+        public void ClearLobbyID()
         {
-            lobbyID = -1;
+            lobbyText.text = $"Private Lobby: ";
         }
     }
 }

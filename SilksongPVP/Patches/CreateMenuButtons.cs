@@ -56,7 +56,7 @@ namespace SilksongMod
             LobbyManager.showingQuickMap = false;
             if (LobbyManager.isGlobalLobby)
             {
-                LobbyDisplay.ClearLobbyID();
+                LobbyManager.ClearLobbyID();
                 //show lobby after leaving
                 LobbyManager.LeaveButtonPressed();
              //   LobbyDisplay.SetPanelActive(true);

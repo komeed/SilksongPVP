@@ -72,7 +72,7 @@ namespace SilksongMod.SteamP2P
                         {
                             SilksongModPlugin.Log.LogInfo("Joining lobby");
                             (int lobbyID, Dictionary<ulong, string> dict) = Deserializer.DeserializeLobbyPlayerDict(data);
-                            LobbyDisplay.SetLobbyIDText(lobbyID);
+                            LobbyManager.SetLobbyIDText(lobbyID);
                             if (lobbyResponseTcs != null && !lobbyResponseTcs.Task.IsCompleted)
                             {
                                 lobbyResponseTcs.SetResult(dict);

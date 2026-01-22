@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using GlobalEnums;
+using HutongGames.PlayMaker.Actions;
 using SilksongMod.Enums;
 using SilksongMod.SteamP2P;
 using Steamworks;
@@ -64,14 +65,30 @@ namespace SilksongMod
 
                 return;
             }
-            byte masks = data[0];
+            Attack type = (Attack)data[0];
             byte direction = data[1];
             CollisionSide x = CollisionSide.left;
             if (direction == 1) // right collider
             {
                 x = CollisionSide.right;
             }
-            LobbyManager.HeroTakeDamage(masks, x, sender, true);
+
+            if (type == Attack.Nail)
+            {
+                SyncedHornetScript script = LobbyManager.LobbyPlayers[sender];
+                if (script.CheckActiveNailAttacks(LobbyManager.HostHornetCollider))
+                {
+                    LobbyManager.HeroTakeDamage(1, x, sender, true);
+                }
+                else
+                {
+                    SilksongModPlugin.Log.LogInfo("hit didn't register! missed");
+                }
+            }
+            else if (type == Attack.Spell)
+            {
+                LobbyManager.HeroTakeDamage(2, x, sender, true);
+            }
         }
 
         public static void RecievePosData(byte[] data, CSteamID sender)
@@ -203,8 +220,7 @@ namespace SilksongMod
             else if (lobbyCommand == LobbyCommand.Message)
             {
                 (string name, string msg) = DeserializeMessage(data);
-                ChatDisplay.AddPlayerText(name, msg);
-                SilksongModPlugin.Log.LogInfo("received message!");
+                LobbyManager.AddPlayerText(name, msg);
             }
         }
 

@@ -106,14 +106,20 @@ namespace SilksongMod
         
         public static void SetActive(bool active)
         {
-            toggleGO.SetActive(active);
-            //toggleGO.GetComponent<Toggle>().isOn = false;
-            textGO.SetActive(active);
+            if (toggleGO != null && textGO != null)
+            {
+                toggleGO.SetActive(active);
+                //toggleGO.GetComponent<Toggle>().isOn = false;
+                textGO.SetActive(active);
+            }
         }
 
         public static void SetToggleOff()
         {
-            toggleGO.GetComponent<Toggle>().isOn = false;
+            if (toggleGO != null)
+            {
+                toggleGO.GetComponent<Toggle>().isOn = false;
+            }
         }
     }
 }

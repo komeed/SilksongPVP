@@ -107,6 +107,7 @@
     <ItemGroup>
         <Compile Include="Deserializer.cs" />
         <Compile Include="Enums\AnimType.cs" />
+        <Compile Include="Enums\AttackType.cs" />
         <Compile Include="Enums\LobbyCommands.cs" />
         <Compile Include="Enums\MethodCommandsEnum.cs" />
         <Compile Include="Enums\NailAttackType.cs" />

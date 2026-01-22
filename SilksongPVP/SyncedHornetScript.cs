@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using GlobalEnums;
+using SilksongMod.Enums;
 using SilksongMod.SteamP2P;
 using Steamworks;
 using UnityEngine;
@@ -31,6 +32,8 @@ namespace SilksongMod
 
         public GameObject CompassIcon;
         public bool foundCompassIcon;
+
+        private HashSet<GameObject> activeNailAttacks;
 
         private void Awake()
         {
@@ -357,7 +360,7 @@ namespace SilksongMod
             LobbyManager.AttacksBuffer = Attacks;
         }
 
-        public static void RemoveAllButGraphics(GameObject go)
+        private static void RemoveAllButGraphics(GameObject go)
         {
             var components = go.GetComponents<Component>();
 
@@ -370,12 +373,34 @@ namespace SilksongMod
                 if (c is MeshFilter) continue;
                 if (c is tk2dSprite) continue;
                 if (c is tk2dSpriteAnimator) continue;
+                if (c is Collider2D) continue;
 
                 Destroy(c);
             }
         }
 
-        public void TakeDamage()
+        public bool CheckActiveNailAttacks(Collider2D co1)
+        {
+            if (activeNailAttacks.IsNullOrEmpty())
+            {
+                SilksongModPlugin.Log.LogInfo("no active nail attacks! need to fix timing.");
+                return true;
+            }
+            foreach (GameObject nailAttack in activeNailAttacks)
+            {
+                if (nailAttack.TryGetComponent(out Collider2D co2))
+                {
+                    if (co1.bounds.Intersects(co2.bounds))
+                    {
+                        SilksongModPlugin.Log.LogInfo("hit detected! sending back");
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public void TakeDamage(Attack type)
         {
             byte direction = 1; // 0 is left, 1 is right
             if (transform.position.x > LobbyManager.HostHornet.transform.position.x)
@@ -383,7 +408,7 @@ namespace SilksongMod
                 direction = 0;
             }
             //SilksongModPlugin.Log.LogInfo("Found Nail Attack! sending hit data"); // mask , direction
-            SteamP2PSender.SendData(steamID, new byte[2] {1, direction}, P2PChannel.Attack); // nail damage deals one mask,
+            SteamP2PSender.SendData(steamID, new byte[2] {(byte)type, direction}, P2PChannel.Attack); // nail damage deals one mask,
             // direction is which side the syncedhornet got hit
         }
 
@@ -394,6 +419,14 @@ namespace SilksongMod
             {
               //  SilksongModPlugin.Log.LogInfo($"Nail Attack tag: {NailAttacks[index].tag}");
                 NailAttacks[index].SetActive(active);
+                if (active)
+                {
+                    activeNailAttacks.Add(NailAttacks[index]);
+                }
+                else
+                {
+                    activeNailAttacks.Remove(NailAttacks[index]);
+                }
             }
             else
             {

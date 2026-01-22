@@ -39,6 +39,7 @@ namespace SilksongMod
 
         public static GameObject HostHornet;
         public static HeroController HeroController;
+        public static Collider2D HostHornetCollider;
 
         public static GameObject AttacksBuffer;
 
@@ -63,6 +64,9 @@ namespace SilksongMod
         private static bool gameFrozen = false;
         private static InputHandler handler;
         
+        private static ChatDisplay chat;
+        private static LobbyDisplay lobby;
+        
         // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
 
         #region Event Functions
@@ -79,7 +83,7 @@ namespace SilksongMod
                 canvas.gameObject.AddComponent<GraphicRaycaster>();
             }
 
-            LobbyDisplay.Init(gameObject, DefaultFont);
+            //LobbyDisplay.Init(gameObject, DefaultFont);
             ResetLobby();
 
             JoinDisplay.Init(gameObject, DefaultFont);
@@ -90,9 +94,8 @@ namespace SilksongMod
                 server = gameObject.AddComponent<UDPConnect>();
                 server.Init(serverIP, 9999, true); // it is the server
             }
-
-            LobbySwitch.CreateSwitchWithLabel(canvas);
-            ChatDisplay.Init(gameObject);
+            CreateChatDisplay(canvas);
+            CreateLobbyDisplay(canvas);
 
             //   Traverse.Create(__instance).Method("PrivateMethodName")
             caller = new PrivateCaller();
@@ -104,6 +107,22 @@ namespace SilksongMod
              SilksongModPlugin.Log.LogInfo("START CALLED");
              await server.JoinGlobalLobby(CurrSteamID, CurrName);
          }*/
+        private void CreateChatDisplay(Canvas canvas)
+        {
+            GameObject container = new GameObject("ChatContainer", typeof(RectTransform));
+            container.transform.SetParent(canvas.transform);
+            DontDestroyOnLoad(container);
+            chat = container.AddComponent<ChatDisplay>();
+        }
+
+        private void CreateLobbyDisplay(Canvas canvas)
+        {
+            GameObject container = new GameObject("LobbyContainer", typeof(RectTransform));
+            container.transform.SetParent(canvas.transform);
+            DontDestroyOnLoad(container);
+            lobby = container.AddComponent<LobbyDisplay>();
+        }
+
 
         public void Update()
         {
@@ -170,8 +189,17 @@ namespace SilksongMod
             {
                 SilksongModPlugin.Log.LogInfo("Space pressed");
             }
-            ChatDisplay.SetActive(SilksongModPlugin.ChatEnabled.Value);
-            LobbyDisplay.SetPanelActive(SilksongModPlugin.LobbyDisplayEnabled.Value);
+
+            if (chat)
+            {
+                chat.gameObject.SetActive(SilksongModPlugin.ChatEnabled.Value);
+            }
+
+            if (lobby)
+            {
+                lobby.gameObject.SetActive(SilksongModPlugin.LobbyDisplayEnabled.Value);
+            }
+
             if (!handler)
             {
                 InputHandler h = ManagerSingleton<InputHandler>.Instance;
@@ -298,7 +326,7 @@ namespace SilksongMod
         public static void AddPlayerToLobby((CSteamID steamID, string name, string scene) playerData)
         {
             SilksongModPlugin.Log.LogInfo($"Adding player {playerData.steamID}. Haven't recieved scene yet.");
-            ChatDisplay.AddPlayerJoinText(playerData.name);
+            chat.AddPlayerJoinText(playerData.name);
             // to add a player, you need to add it to the dictionary and update the ui
             SyncedHornetScript
                 script = CreateHornet(playerData.steamID, playerData.name,
@@ -402,6 +430,7 @@ namespace SilksongMod
             HostHornet = hornet;
             HostHornet.AddComponent<NetworkSender>();
             HeroController = HostHornet.GetComponent<HeroController>();
+            HostHornetCollider = HostHornet.GetComponent<Collider2D>();
             SilksongModPlugin.Log.LogInfo($"InvulTime for herocontroller: {HeroController.INVUL_TIME}");
         }
 
@@ -410,7 +439,7 @@ namespace SilksongMod
             SilksongModPlugin.Log.LogInfo($"Leave recieved from player {player}");
             if (LobbyPlayers.TryGetValue(player, out SyncedHornetScript hornet))
             {
-                ChatDisplay.AddPlayerLeaveText(hornet.name);
+                chat.AddPlayerLeaveText(hornet.name);
                 Destroy(hornet.gameObject); //simply destroy him
                 LobbyPlayers.Remove(player);
                 UpdateLobbyUI();
@@ -425,9 +454,9 @@ namespace SilksongMod
 
         private static void UpdateLobbyUI()
         {
-            if (!isGlobalLobby)
+            if (lobby)
             {
-                LobbyDisplay.UpdatePlayerList(LobbyPlayers);
+                lobby.UpdatePlayerList(LobbyPlayers);
             }
         }
 
@@ -517,10 +546,16 @@ namespace SilksongMod
 
         public static void SendMessage(string msg)
         {
-            ChatDisplay.AddPlayerText(CurrName, msg);
+            chat.AddPlayerText(CurrName, msg);
             SilksongModPlugin.Log.LogInfo("sent message!");
             byte[] data = Serializer.SerializeMessage(CurrName, msg);
             SendLobbyDataToLobby(data);
+        }
+
+        public static void AddPlayerText(string name, string msg)
+        {
+            chat.AddPlayerText(name, msg);
+            SilksongModPlugin.Log.LogInfo($"added message for player {name}!");
         }
 
         public static void FreezeGame()
@@ -570,6 +605,27 @@ namespace SilksongMod
         {
             caller.CallGetSceneInfo(gameMap, scene, zone, out GameMapScene mapScene, out var sceneObj, out var scenePos);
             return caller.CallGetMapPosition(gameMap, scenePos, mapScene, sceneObj, scenePos, Vector2.zero);
+        }
+
+        public static void SetLobbyIDText(int lobbyID)
+        {
+            if (lobby)
+            {
+                lobby.SetLobbyIDText(lobbyID);
+            }
+        }
+
+        public static void ClearLobbyID()
+        {
+            if (lobby)
+            {
+                lobby.ClearLobbyID();
+            }
+        }
+
+        public static void JoinGlobalLobby()
+        {
+            server.JoinGlobalLobby(CurrSteamID, CurrName);
         }
     }
 }

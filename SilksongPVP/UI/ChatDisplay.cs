@@ -5,15 +5,14 @@ using TMPro;
 namespace SilksongMod
 {
 
-    public static class ChatDisplay
+    public class ChatDisplay : MonoBehaviour
     {
-        public static GameObject chatPanel;
+        //public static GameObject chatPanel; this monobehaviour is on the chatpanel object
         private static RectTransform chatPanelRect;
         public static GameObject messagesContainer;
         private static GameObject ScrollView;
         private static GameObject inputContainer;
         private static GameObject rootLayout;
-        public static Font customFont;
 
         public static ChatInputField textBox;
 
@@ -23,39 +22,32 @@ namespace SilksongMod
 
         private static Font defaultFont = Resources.GetBuiltinResource<Font>("Arial.ttf");
 
-        public static void Init(GameObject parent)
+        public void Awake()
         {
-            chatPanel = CreateContainer(parent);
-            chatPanelRect = chatPanel.GetComponent<RectTransform>();
-            rootLayout = CreateRootLayout(chatPanel);
+            CreateContainer();
+            chatPanelRect = GetComponent<RectTransform>();
+            rootLayout = CreateRootLayout(gameObject);
             messagesContainer = CreateMessagesContainer(rootLayout);
             inputContainer = CreateInputContainer(rootLayout);
             textBox = UIHelper.CreateChatTextBox(inputContainer, new Vector2(ChatSize.x, chatBoxHeight));
             textBox.transform.SetAsLastSibling();
         }
 
-        public static GameObject CreateContainer(GameObject parent)
+        public void CreateContainer()
         {
-            GameObject container = new GameObject(
-                "ChatContainer",
-                typeof(RectTransform)
-            );
-            container.transform.SetParent(parent.transform, false);
-
-            RectTransform rt = container.GetComponent<RectTransform>();
+            RectTransform rt = gameObject.GetComponent<RectTransform>();
+            if (rt == null)
+            {
+                rt = gameObject.AddComponent<RectTransform>();
+            }
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(0f, 0f);
             rt.pivot = new Vector2(0f, 0f);
             rt.sizeDelta = ChatSize;
             rt.anchoredPosition = Vector2.zero;
-
-            //Image img = container.GetComponent<Image>();
-            //img.color = new Color(0f, 0f, 0f, 0.75f);
-
-            return container;
         }
 
-        private static GameObject CreateRootLayout(GameObject parent)
+        private GameObject CreateRootLayout(GameObject parent)
         {
             GameObject root = new GameObject(
                 "RootLayout",
@@ -80,7 +72,7 @@ namespace SilksongMod
             return root;
         }
 
-        private static GameObject CreateInputContainer(GameObject parent)
+        private GameObject CreateInputContainer(GameObject parent)
         {
             GameObject container = new GameObject(
                 "InputContainer",
@@ -97,18 +89,7 @@ namespace SilksongMod
             return container;
         }
 
-        private static GameObject CreateLobbyInfoContainer(GameObject parent)
-        {
-            GameObject container = new GameObject(
-                "LobbyInfoContainer",
-                typeof(RectTransform),
-                typeof(HorizontalLayoutGroup)
-            );
-            container.transform.SetParent(parent.transform, false);
-            return container;
-        }
-
-        private static GameObject CreateMessagesContainer(GameObject parent)
+        private GameObject CreateMessagesContainer(GameObject parent)
         {
             GameObject container = new GameObject(
                 "MessagesContainer",
@@ -139,7 +120,7 @@ namespace SilksongMod
         }
 
 
-        public static void AddPlayerText(string name, string msg)
+        public void AddPlayerText(string name, string msg)
         {
             GameObject txt = UIHelper.CreateChatText(
                 messagesContainer,
@@ -154,7 +135,7 @@ namespace SilksongMod
             CullOldMessages(messagesContainer, chatPanelRect);
         }
 
-        public static void AddPlayerLeaveText(string name)
+        public void AddPlayerLeaveText(string name)
         {
             GameObject txt = UIHelper.CreateChatText(
                 messagesContainer,
@@ -169,7 +150,7 @@ namespace SilksongMod
             CullOldMessages(messagesContainer, chatPanelRect);
         }
 
-        public static void AddPlayerJoinText(string name)
+        public void AddPlayerJoinText(string name)
         {
             GameObject txt = UIHelper.CreateChatText(
                 messagesContainer,
@@ -184,7 +165,7 @@ namespace SilksongMod
             CullOldMessages(messagesContainer, chatPanelRect);
         }
         
-        public static void CullOldMessages(GameObject messagesContainer, RectTransform chatContainer)
+        private void CullOldMessages(GameObject messagesContainer, RectTransform chatContainer)
         {
             if (messagesContainer.transform.childCount == 0)
                 return;
@@ -209,9 +190,9 @@ namespace SilksongMod
             }
         }
 
-        public static void SetActive(bool active)
+        public void SetActive(bool active)
         {
-            chatPanel.gameObject.SetActive(active);
+            gameObject.SetActive(active);
         }
     }
 }

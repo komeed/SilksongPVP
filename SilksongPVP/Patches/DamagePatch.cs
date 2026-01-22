@@ -15,17 +15,32 @@ namespace SilksongMod.Patches
         public static bool Prefix(DamageEnemies __instance, Collider2D collision) 
         {
            //PrintFullHierarchyInfo(__instance.gameObject);
-           //SilksongModPlugin.Log.LogInfo("path of " + __instance.name + ": " + GetFullPath(__instance.transform));
+          // SilksongModPlugin.Log.LogInfo("path of " + __instance.name + ": " + GetFullPath(__instance.transform) + "tag:  " + __instance.tag);
+          // DamagePatch.PrintComponents(__instance.transform);
+          // SilksongModPlugin.Log.LogInfo("attack type: " + __instance.attackType);
           //  SilksongModPlugin.Log.LogInfo($"TriggerEnter2D: hit some object! idk what. Curr Object: trigger: {__instance.gameObject.GetComponent<Collider2D>().isTrigger}");
            // PhysLayers layer = (PhysLayers)((Component)(object)collision).gameObject.layer;
             //SilksongModPlugin.Log.LogInfo($"Layer of object: {layer}");
-            
-            if (collision.gameObject.TryGetComponent<SyncedHornetScript>(out var script) && (__instance.attackType == AttackTypes.Nail || __instance.attackType == AttackTypes.Spell))
+            // only do it if its not a tool (are silk skills tools?)
+            if (collision.gameObject.TryGetComponent<SyncedHornetScript>(out var script))
             {
-                //SilksongModPlugin.Log.LogInfo("attack type: " + __instance.attackType);
-                //SilksongModPlugin.Log.LogInfo("hit synced hornet! sending hit");
-                script.TakeDamage();
-                //return false;
+                if (__instance.attackType == AttackTypes.Nail)
+                {
+                    SilksongModPlugin.Log.LogInfo("hit synced hornet with nail! sending hit");
+                    script.TakeDamage(Attack.Nail);
+                }
+                else if (__instance.RepresentingTool) // if spell (hopefuly this works, if not use below)
+                {
+                    if (__instance.RepresentingTool.Type == ToolItemType.Skill)
+                    {
+                        SilksongModPlugin.Log.LogInfo("hit synced hornet with spell! sending hit");
+                        script.TakeDamage(Attack.Spell);
+                    }
+                    else
+                    {
+                        SilksongModPlugin.Log.LogInfo("red/white/blue tool: not sending (too broken)");
+                    }
+                }
             }
 
             return true;

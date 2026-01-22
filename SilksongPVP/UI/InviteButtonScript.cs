@@ -218,20 +218,6 @@ namespace SilksongMod
             RemoveOverlay();
         }
 
-        public static void HostButtonPressed()
-        {
-            SilksongModPlugin.Log.LogInfo("host button pressed! showing lobby name enter.");
-            RemoveOverlay();
-            CreateHostLobbyLayout(parentCanvas);
-        }
-
-        private static void JoinButtonPressed()
-        {
-            SilksongModPlugin.Log.LogInfo("join button pressed! showing lobby name join.");
-            RemoveOverlay();
-            CreateJoinLobbyLayout(parentCanvas);
-        }
-
         public static bool OverlayActive()
         {
             if (overlayRoot == null)
