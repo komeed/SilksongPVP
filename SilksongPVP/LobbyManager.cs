@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using GlobalEnums;
 using HarmonyLib;
@@ -66,6 +67,9 @@ namespace SilksongMod
         
         private static ChatDisplay chat;
         private static LobbyDisplay lobby;
+
+        public static bool waitingForServerResponse = false;
+        public static bool startSearching = false;
         
         // public static HashSet<CSteamID> PendingPlayer =  new HashSet<CSteamID>(); // players that haven't responded yet 
 
@@ -311,6 +315,8 @@ namespace SilksongMod
             {
                 // if you are leaving the global lobby, make sure to send the server that you are leaving as well
                 server.LeaveGlobalLobby(CurrSteamID, CurrName);
+                isGlobalLobby = false;
+                lobby.ClearLobbyID();
             }
 
             //first send to all people in lobby
@@ -363,14 +369,6 @@ namespace SilksongMod
             foreach (SyncedHornetScript script in LobbyPlayers.Values)
             {
                 SteamP2PSender.SendData(script.steamID, data, P2PChannel.Lobby);
-            }
-        }
-
-        public static void ActivateHornets(bool active)
-        {
-            foreach (SyncedHornetScript hornet in LobbyPlayers.Values)
-            {
-                hornet.gameObject.SetActive(active);
             }
         }
 
@@ -452,7 +450,7 @@ namespace SilksongMod
 
         #region Helper Methods
 
-        private static void UpdateLobbyUI()
+        public static void UpdateLobbyUI()
         {
             if (lobby)
             {
@@ -601,25 +599,11 @@ namespace SilksongMod
             }
         }
 
-        private static Vector2 GetMapLocationForScene(string scene, MapZone zone)
-        {
-            caller.CallGetSceneInfo(gameMap, scene, zone, out GameMapScene mapScene, out var sceneObj, out var scenePos);
-            return caller.CallGetMapPosition(gameMap, scenePos, mapScene, sceneObj, scenePos, Vector2.zero);
-        }
-
         public static void SetLobbyIDText(int lobbyID)
         {
             if (lobby)
             {
                 lobby.SetLobbyIDText(lobbyID);
-            }
-        }
-
-        public static void ClearLobbyID()
-        {
-            if (lobby)
-            {
-                lobby.ClearLobbyID();
             }
         }
 

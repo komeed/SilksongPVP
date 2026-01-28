@@ -48,6 +48,9 @@
         <Reference Include="com.rlabrecque.steamworks.net">
           <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\com.rlabrecque.steamworks.net.dll</HintPath>
         </Reference>
+        <Reference Include="PlayMaker">
+          <HintPath>..\..\..\Library\Application Support\Steam\steamapps\common\Hollow Knight Silksong\Hollow Knight Silksong.app\Contents\Resources\Data\Managed\PlayMaker.dll</HintPath>
+        </Reference>
         <Reference Include="System"/>
         <Reference Include="System.Core"/>
         <Reference Include="System.Data"/>
@@ -118,7 +121,6 @@
         <Compile Include="Patches\CompassPatch.cs" />
         <Compile Include="Patches\CreateMenuButtons.cs" />
         <Compile Include="Patches\DamagePatch.cs" />
-        <Compile Include="Patches\OnEnterWorld.cs" />
         <Compile Include="Patches\OnHornetSpawn.cs" />
         <Compile Include="Patches\OnNextLevelReadyPatch.cs" />
         <Compile Include="Patches\PrivateCaller.cs" />

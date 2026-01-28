@@ -12,14 +12,14 @@ namespace SilksongMod.Patches
     public class DamagePatch
     {
         [HarmonyPrefix]
-        public static bool Prefix(DamageEnemies __instance, Collider2D collision) 
+        public static bool Prefix(DamageEnemies __instance, Collider2D collision)
         {
-           //PrintFullHierarchyInfo(__instance.gameObject);
-          // SilksongModPlugin.Log.LogInfo("path of " + __instance.name + ": " + GetFullPath(__instance.transform) + "tag:  " + __instance.tag);
-          // DamagePatch.PrintComponents(__instance.transform);
-          // SilksongModPlugin.Log.LogInfo("attack type: " + __instance.attackType);
-          //  SilksongModPlugin.Log.LogInfo($"TriggerEnter2D: hit some object! idk what. Curr Object: trigger: {__instance.gameObject.GetComponent<Collider2D>().isTrigger}");
-           // PhysLayers layer = (PhysLayers)((Component)(object)collision).gameObject.layer;
+            //PrintFullHierarchyInfo(__instance.gameObject);
+            // SilksongModPlugin.Log.LogInfo("path of " + __instance.name + ": " + GetFullPath(__instance.transform) + "tag:  " + __instance.tag);
+            // DamagePatch.PrintComponents(__instance.transform);
+            // SilksongModPlugin.Log.LogInfo("attack type: " + __instance.attackType);
+            //  SilksongModPlugin.Log.LogInfo($"TriggerEnter2D: hit some object! idk what. Curr Object: trigger: {__instance.gameObject.GetComponent<Collider2D>().isTrigger}");
+            // PhysLayers layer = (PhysLayers)((Component)(object)collision).gameObject.layer;
             //SilksongModPlugin.Log.LogInfo($"Layer of object: {layer}");
             // only do it if its not a tool (are silk skills tools?)
             if (collision.gameObject.TryGetComponent<SyncedHornetScript>(out var script))
@@ -45,126 +45,80 @@ namespace SilksongMod.Patches
 
             return true;
         }
-        
+
         public static void PrintFullHierarchyInfo(GameObject obj)
-    {
-        if (obj == null)
         {
-            Debug.LogWarning("GameObject is null!");
-            return;
+            if (obj == null)
+            {
+                Debug.LogWarning("GameObject is null!");
+                return;
+            }
+
+            // Build full path of the original object
+            string fullPath = GetFullPath(obj.transform);
+            // SilksongModPlugin.Log.LogInfo("Full Path: " + fullPath);
+
+            // Loop through the object and all its parents
+            Transform current = obj.transform;
+            while (current != null)
+            {
+                PrintComponents(current);
+
+                // Print all children recursively (but skip if the root is Hero_Hornet(Clone))
+                if (current.name != "Hero_Hornet(Clone)" && current.name != "Special Attacks")
+                {
+                    foreach (Transform child in current)
+                    {
+                        PrintChildrenRecursive(child);
+                    }
+                }
+
+                current = current.parent;
+            }
         }
 
-        // Build full path of the original object
-        string fullPath = GetFullPath(obj.transform);
-       // SilksongModPlugin.Log.LogInfo("Full Path: " + fullPath);
-
-        // Loop through the object and all its parents
-        Transform current = obj.transform;
-        while (current != null)
+        // Print all components on a single GameObject
+        public static void PrintComponents(Transform t)
         {
-            PrintComponents(current);
-
-            // Print all children recursively (but skip if the root is Hero_Hornet(Clone))
-            if (current.name != "Hero_Hornet(Clone)" && current.name != "Special Attacks")
+            Component[] components = t.GetComponents<Component>();
+            string path = GetFullPath(t);
+            SilksongModPlugin.Log.LogInfo("Components on " + path + ":");
+            if (components.Length == 0)
             {
-                foreach (Transform child in current)
+                SilksongModPlugin.Log.LogInfo(" - None");
+            }
+            else
+            {
+                foreach (Component c in components)
                 {
-                    PrintChildrenRecursive(child);
+                    SilksongModPlugin.Log.LogInfo(" - " + c.GetType().Name);
                 }
             }
-
-            current = current.parent;
         }
-    }
 
-    // Print all components on a single GameObject
-    public static void PrintComponents(Transform t)
-    {
-        Component[] components = t.GetComponents<Component>();
-        string path = GetFullPath(t);
-        SilksongModPlugin.Log.LogInfo("Components on " + path + ":");
-        if (components.Length == 0)
+        // Recursively print all children and their components
+        public static void PrintChildrenRecursive(Transform parent)
         {
-            SilksongModPlugin.Log.LogInfo(" - None");
-        }
-        else
-        {
-            foreach (Component c in components)
+            PrintComponents(parent);
+
+            foreach (Transform child in parent)
             {
-                SilksongModPlugin.Log.LogInfo(" - " + c.GetType().Name);
+                PrintChildrenRecursive(child);
             }
         }
-    }
 
-    // Recursively print all children and their components
-    public static void PrintChildrenRecursive(Transform parent)
-    {
-        PrintComponents(parent);
-
-        foreach (Transform child in parent)
+        // Helper to get the full path of a Transform
+        public static string GetFullPath(Transform t)
         {
-            PrintChildrenRecursive(child);
-        }
-    }
-
-    // Helper to get the full path of a Transform
-    public static string GetFullPath(Transform t)
-    {
-        string path = t.name;
-        Transform current = t.parent;
-        while (current != null)
-        {
-            path = current.name + "/" + path;
-            current = current.parent;
-        }
-        return path;
-    }
-    }
-    /*
-    [HarmonyPatch(typeof(HeroController))]
-    [HarmonyPatch("GetWillThrowTool", new[] { typeof(bool) })]
-    public class CollisionPatch
-    {
-        [HarmonyPrefix]
-        public static void Prefix(HeroController __instance, bool reportFailure) 
-        {
-            AttackToolBinding usedBinding;
-            ToolItem item = ToolItemManager.GetBoundAttackTool(AttackToolBinding.Neutral, ToolEquippedReadSource.Active, out usedBinding);
-            SilksongModPlugin.Log.LogInfo($"Silk skill: {item.Description}, {item.DisplayName}, FSM event name: {item.Usage.FsmEventName}");
-            GameObject throwPrefab = item.Usage.ThrowPrefab;
-            if (throwPrefab != null)
+            string path = t.name;
+            Transform current = t.parent;
+            while (current != null)
             {
-                SilksongModPlugin.Log.LogInfo(
-                    $"Throw prefab name: {throwPrefab.name}, path: {DamagePatch.GetFullPath(throwPrefab.transform)}");
+                path = current.name + "/" + path;
+                current = current.parent;
+            }
 
-            }
-            else {
-                SilksongModPlugin.Log.LogInfo("no throw prefab!");
-            }
+            return path;
         }
-    }*/
-    /*
-    [HarmonyPatch(typeof(HeroController))]
-    [HarmonyPatch("ThrowTool", new[] { typeof(bool) })]
-    public class ThrowToolPatch
-    {
-        [HarmonyPrefix]
-        public static void Prefix(HeroController __instance, bool isAutoThrow) 
-        {
-            AttackToolBinding usedBinding;
-            ToolItem item = ToolItemManager.GetBoundAttackTool(AttackToolBinding.Neutral, ToolEquippedReadSource.Active, out usedBinding);
-            if(__instance.CanThrowTool(item, ))
-            SilksongModPlugin.Log.LogInfo($"Silk skill: {item.Description}, {item.DisplayName}, FSM event name: {item.Usage.FsmEventName}");
-            GameObject throwPrefab = item.Usage.ThrowPrefab;
-            if (throwPrefab != null)
-            {
-                SilksongModPlugin.Log.LogInfo(
-                    $"Throw prefab name: {throwPrefab.name}, path: {DamagePatch.GetFullPath(throwPrefab.transform)}");
-
-            }
-            else {
-                SilksongModPlugin.Log.LogInfo("no throw prefab!");
-            }
-        }
-        }*/
+    }
 }

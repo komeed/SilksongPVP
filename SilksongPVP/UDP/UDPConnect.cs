@@ -70,6 +70,8 @@ namespace SilksongMod.SteamP2P
 
                         if (data[0] == (byte)UDPCommand.JoinGlobalLobby)
                         {
+                            LobbyManager.waitingForServerResponse = false;
+                            LobbyManager.isGlobalLobby = true;
                             SilksongModPlugin.Log.LogInfo("Joining lobby");
                             (int lobbyID, Dictionary<ulong, string> dict) = Deserializer.DeserializeLobbyPlayerDict(data);
                             LobbyManager.SetLobbyIDText(lobbyID);
@@ -78,7 +80,7 @@ namespace SilksongMod.SteamP2P
                                 lobbyResponseTcs.SetResult(dict);
                             }
 
-                            ProcessLobbyDict(dict);
+                            //ProcessLobbyDict(dict);
                         }
                     }
                 }
@@ -121,7 +123,11 @@ namespace SilksongMod.SteamP2P
             {
                 Dictionary<ulong, string> dict = lobbyResponseTcs.Task.Result;
                 SilksongModPlugin.Log.LogInfo("Lobby response received from server");
+                LobbyManager.waitingForServerResponse = false;
+                LobbyManager.isGlobalLobby = true;
                 // Continue processing
+                byte[] singlePlayerData = Serializer.SerializeSinglePlayer(LobbyManager.CurrSteamID,
+                    LobbyManager.CurrName, LobbyManager.CurrScene);
                 foreach (var x in dict)
                 {
                     CSteamID newID = new CSteamID(x.Key);
@@ -129,13 +135,12 @@ namespace SilksongMod.SteamP2P
                     {
                         SilksongModPlugin.Log.LogInfo($"Joining player in lobby: {x.Key}: {x.Value}");
                         // send your local player data via P2P
-                        byte[] singlePlayerData = Serializer.SerializeSinglePlayer(LobbyManager.CurrSteamID,
-                            LobbyManager.CurrName, LobbyManager.CurrScene);
                         SteamP2PSender.SendData(newID, singlePlayerData, P2PChannel.Lobby);
                         SyncedHornetScript script = LobbyManager.CreateHornet(newID, x.Value, "temp");
                         LobbyManager.LobbyPlayers.Add(newID, script);
                     }
                 }
+                LobbyManager.UpdateLobbyUI();
             }
             else
             {
@@ -157,12 +162,12 @@ namespace SilksongMod.SteamP2P
             foreach (var x in dict)
             {
                 CSteamID newID = new CSteamID(x.Key);
-                if (newID != LobbyManager.CurrSteamID)
+                if (newID != LobbyManager.CurrSteamID &&  newID != LobbyManager.CurrSteamID)
                 {
                     SilksongModPlugin.Log.LogInfo($"joining player in lobby: {x.Key}: {x.Value}");
                     SteamP2PSender.SendData(newID, singlePlayerData, P2PChannel.Lobby);
                     SyncedHornetScript script = LobbyManager.CreateHornet(newID, x.Value, "temp");
-                    LobbyManager.LobbyPlayers.Add(newID, script);
+                    LobbyManager.LobbyPlayers[newID] = script;
                 }
             }
         }

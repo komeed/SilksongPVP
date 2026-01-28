@@ -185,7 +185,7 @@ namespace SilksongMod
             rt.anchorMin = new Vector2(0, 0.5f);
             rt.anchorMax = new Vector2(0, 0.5f);
             rt.pivot = new Vector2(0, 0.5f);
-            rt.sizeDelta = new Vector2(120, 32); // height only; width from layout
+            rt.sizeDelta = new Vector2(120, 26); // height only; width from layout
 
             // --- Button ---
             Button button = buttonObj.AddComponent<Button>();
@@ -197,8 +197,8 @@ namespace SilksongMod
 
             // --- Layout Element ---
             LayoutElement layout = buttonObj.AddComponent<LayoutElement>();
-            layout.minHeight = 32;
-            layout.preferredHeight = 32;
+            layout.minHeight = 26;
+            layout.preferredHeight = 26;
             layout.preferredWidth = 120;
 
             // --- Text Child ---
@@ -278,6 +278,7 @@ namespace SilksongMod
         {
             if (!LobbyManager.isGlobalLobby)
             {
+                LobbyManager.waitingForServerResponse = true;
                 LobbyManager.JoinGlobalLobby();
             }
             else
